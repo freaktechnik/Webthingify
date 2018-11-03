@@ -38,7 +38,7 @@ class Phone extends Thing implements SensorEventListener, Consumer<Boolean> {
     private final Sensor pressureSensor;
     private final Sensor humiditySensor;
 
-    private String cameraId;
+    private String cameraId = null;
 
     public Phone(String name, SensorManager sensors, BatteryManager batteries, CameraManager cameras, Vibrator vib) {
         super(name,
@@ -51,14 +51,6 @@ class Phone extends Thing implements SensorEventListener, Consumer<Boolean> {
         cameraManager = cameras;
         vibrator = vib;
 
-        //TODO only add property when it's available.
-
-        Map<String, Object> onDescription = new HashMap<>();
-        onDescription.put("@type", "OnOffProperty");
-        onDescription.put("label", "Flashlight On/Off");
-        onDescription.put("type", "boolean");
-        onDescription.put("description", "Whether the flashlight is turned on");
-
         try {
             String[] cams = cameraManager.getCameraIdList();
             for (int i = 0; i < cams.length; ++i) {
@@ -68,19 +60,26 @@ class Phone extends Thing implements SensorEventListener, Consumer<Boolean> {
                     break;
                 }
             }
-            final Value<Boolean> on = new Value<>(true, this);
-            CameraManager.TorchCallback torchCallback = new CameraManager.TorchCallback() {
-                @Override
-                public void onTorchModeChanged(@androidx.annotation.NonNull String camId, boolean enabled) {
-                    super.onTorchModeChanged(camId, enabled);
-                    if (cameraId.equals(camId)) {
-                        on.set(enabled);
+            if(cameraId != null) {
+                Map<String, Object> onDescription = new HashMap<>();
+                onDescription.put("@type", "OnOffProperty");
+                onDescription.put("label", "Flashlight On/Off");
+                onDescription.put("type", "boolean");
+                onDescription.put("description", "Whether the flashlight is turned on");
+                final Value<Boolean> on = new Value<>(true, this);
+                CameraManager.TorchCallback torchCallback = new CameraManager.TorchCallback() {
+                    @Override
+                    public void onTorchModeChanged(@androidx.annotation.NonNull String camId, boolean enabled) {
+                        super.onTorchModeChanged(camId, enabled);
+                        if (cameraId.equals(camId)) {
+                            on.set(enabled);
+                        }
                     }
-                }
-            };
-            cameraManager.registerTorchCallback(torchCallback, null);
+                };
+                cameraManager.registerTorchCallback(torchCallback, null);
 
-            addProperty(new Property(phone, "on", on, onDescription));
+                addProperty(new Property(phone, "on", on, onDescription));
+            }
         } catch (CameraAccessException e) {
             // e.printStackTrace();
         }
