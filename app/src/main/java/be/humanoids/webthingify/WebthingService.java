@@ -58,13 +58,13 @@ public class WebthingService extends IntentService {
         };
         registerReceiver(batteryReceiver, filter);
 
-        PowerManager pm = (PowerManager)getSystemService(Context.POWER_SERVICE);
-        wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "Webthingify:Server");
-        wakeLock.acquire();
-
         server = new ServerTask();
         server.execute(phone);
         //TODO stopSelf if server isn't started and turn off switch
+
+        PowerManager pm = (PowerManager)getSystemService(Context.POWER_SERVICE);
+        wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "Webthingify:Server");
+        wakeLock.acquire();
     }
 
     @Override
