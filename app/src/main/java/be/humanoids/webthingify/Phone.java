@@ -1,4 +1,4 @@
-package humanoids.be.webthingify;
+package be.humanoids.webthingify;
 
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -10,40 +10,39 @@ import android.hardware.camera2.CameraManager;
 import android.os.BatteryManager;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
+import android.util.Log;
 
 import org.mozilla.iot.webthing.Property;
 import org.mozilla.iot.webthing.Thing;
 import org.mozilla.iot.webthing.Value;
 
-import java.lang.reflect.Array;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Consumer;
 
-class Phone extends Thing implements SensorEventListener, Consumer<Boolean> {
+class Phone extends Thing implements SensorEventListener {
     private final SensorManager sensorManager;
     private final BatteryManager batteryManager;
     private final CameraManager cameraManager;
     private final Vibrator vibrator;
-
+    private final Sensor brightnessSensor;
+    private final Sensor proximitySensor;
+    private final Sensor pressureSensor;
+    private final Sensor humiditySensor;
     private Value<Double> brightness;
     private Value<Double> proximity;
     private Value<Double> pressure;
     private Value<Double> humidity;
     private Value<Integer> battery;
     private Value<Boolean> charging;
-
-    private final Sensor brightnessSensor;
-    private final Sensor proximitySensor;
-    private final Sensor pressureSensor;
-    private final Sensor humiditySensor;
+    private CameraManager.TorchCallback torchCallback = null;
 
     private String cameraId = null;
 
     public Phone(String name, SensorManager sensors, BatteryManager batteries, CameraManager cameras, Vibrator vib) {
         super(name,
-            Array.asList("OnOffSwitch", "Light"),
-            "An Android phone"
+                Arrays.asList("OnOffSwitch", "Light"),
+                "An Android phone"
         );
 
         sensorManager = sensors;
@@ -60,16 +59,22 @@ class Phone extends Thing implements SensorEventListener, Consumer<Boolean> {
                     break;
                 }
             }
-            if(cameraId != null) {
+            if (cameraId != null) {
                 Map<String, Object> onDescription = new HashMap<>();
                 onDescription.put("@type", "OnOffProperty");
                 onDescription.put("label", "Flashlight On/Off");
                 onDescription.put("type", "boolean");
                 onDescription.put("description", "Whether the flashlight is turned on");
-                final Value<Boolean> on = new Value<>(true, this);
-                CameraManager.TorchCallback torchCallback = new CameraManager.TorchCallback() {
+                final Value<Boolean> on = new Value<>(true, newValue -> {
+                    try {
+                        cameraManager.setTorchMode(cameraId, newValue);
+                    } catch (CameraAccessException e) {
+                        // e.printStackTrace();
+                    }
+                });
+                torchCallback = new CameraManager.TorchCallback() {
                     @Override
-                    public void onTorchModeChanged(@androidx.annotation.NonNull String camId, boolean enabled) {
+                    public void onTorchModeChanged(String camId, boolean enabled) {
                         super.onTorchModeChanged(camId, enabled);
                         if (cameraId.equals(camId)) {
                             on.set(enabled);
@@ -78,10 +83,10 @@ class Phone extends Thing implements SensorEventListener, Consumer<Boolean> {
                 };
                 cameraManager.registerTorchCallback(torchCallback, null);
 
-                addProperty(new Property(phone, "on", on, onDescription));
+                addProperty(new Property(this, "on", on, onDescription));
             }
         } catch (CameraAccessException e) {
-            // e.printStackTrace();
+            Log.w("wt:flash", "Error when making flash property", e);
         }
 
         Map<String, Object> batteryDescription = new HashMap<>();
@@ -94,7 +99,7 @@ class Phone extends Thing implements SensorEventListener, Consumer<Boolean> {
 
         battery = new Value<>(batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY));
 
-        addProperty(new Property(phone, "battery", battery, batteryDescription));
+        addProperty(new Property(this, "battery", battery, batteryDescription));
 
         Map<String, Object> chargingDescription = new HashMap<>();
         chargingDescription.put("type", "boolean");
@@ -104,10 +109,10 @@ class Phone extends Thing implements SensorEventListener, Consumer<Boolean> {
 
         charging = new Value<>(batteryManager.isCharging());
 
-        addProperty(new Property(phone, "charging", charging, chargingDescription));
+        addProperty(new Property(this, "charging", charging, chargingDescription));
 
         brightnessSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
-        if(brightnessSensor != null) {
+        if (brightnessSensor != null) {
             Map<String, Object> brightnessDescription = new HashMap<>();
             brightnessDescription.put("@type", "LevelProperty");
             brightnessDescription.put("type", "number");
@@ -117,7 +122,7 @@ class Phone extends Thing implements SensorEventListener, Consumer<Boolean> {
 
             brightness = new Value<>(0.0);
 
-            addProperty(new Property(phone, "brightness", brightness, brightnessDescription));
+            addProperty(new Property(this, "brightness", brightness, brightnessDescription));
             sensorManager.registerListener(this, brightnessSensor, SensorManager.SENSOR_DELAY_NORMAL);
         }
 
@@ -129,10 +134,10 @@ class Phone extends Thing implements SensorEventListener, Consumer<Boolean> {
 
         Value<Double> loudness = new Value<>(0.0);
 
-        addProperty(new Property(phone, "loudness", loudness, loudnessDescription));
+        addProperty(new Property(this, "loudness", loudness, loudnessDescription));
 
         proximitySensor = sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
-        if(proximitySensor != null) {
+        if (proximitySensor != null) {
             Map<String, Object> proximityDescription = new HashMap<>();
             proximityDescription.put("type", "number");
             proximityDescription.put("readOnly", true);
@@ -141,12 +146,12 @@ class Phone extends Thing implements SensorEventListener, Consumer<Boolean> {
 
             proximity = new Value<>(0.0);
 
-            addProperty(new Property(phone, "proximity", proximity, proximityDescription));
+            addProperty(new Property(this, "proximity", proximity, proximityDescription));
             sensorManager.registerListener(this, proximitySensor, SensorManager.SENSOR_DELAY_NORMAL);
         }
 
         pressureSensor = sensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE);
-        if(pressureSensor != null) {
+        if (pressureSensor != null) {
             Map<String, Object> pressureDescription = new HashMap<>();
             pressureDescription.put("type", "number");
             pressureDescription.put("readOnly", true);
@@ -155,12 +160,12 @@ class Phone extends Thing implements SensorEventListener, Consumer<Boolean> {
 
             pressure = new Value<>(0.0);
 
-            addProperty(new Property(phone, "pressure", pressure, pressureDescription));
+            addProperty(new Property(this, "pressure", pressure, pressureDescription));
             sensorManager.registerListener(this, pressureSensor, SensorManager.SENSOR_DELAY_NORMAL);
         }
 
         humiditySensor = sensorManager.getDefaultSensor(Sensor.TYPE_RELATIVE_HUMIDITY);
-        if(humiditySensor != null) {
+        if (humiditySensor != null) {
             Map<String, Object> humidityDescription = new HashMap<>();
             humidityDescription.put("@type", "LevelProperty");
             humidityDescription.put("type", "number");
@@ -170,7 +175,7 @@ class Phone extends Thing implements SensorEventListener, Consumer<Boolean> {
 
             humidity = new Value<>(0.0);
 
-            addProperty(new Property(phone, "humidity", humidity, humidityDescription));
+            addProperty(new Property(this, "humidity", humidity, humidityDescription));
             sensorManager.registerListener(this, humiditySensor, SensorManager.SENSOR_DELAY_NORMAL);
         }
 
@@ -197,18 +202,18 @@ class Phone extends Thing implements SensorEventListener, Consumer<Boolean> {
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-        switch(event.sensor.getType()) {
+        switch (event.sensor.getType()) {
             case Sensor.TYPE_LIGHT:
-                brightness.set((double)event.values[0]);
+                brightness.set((double) event.values[0]);
                 break;
             case Sensor.TYPE_PRESSURE:
-                pressure.set((double)event.values[0]);
+                pressure.set((double) event.values[0]);
                 break;
             case Sensor.TYPE_PROXIMITY:
-                proximity.set((double)event.values[0]);
+                proximity.set((double) event.values[0]);
                 break;
             case Sensor.TYPE_RELATIVE_HUMIDITY:
-                humidity.set((double)event.values[0]);
+                humidity.set((double) event.values[0]);
                 break;
         }
     }
@@ -217,13 +222,11 @@ class Phone extends Thing implements SensorEventListener, Consumer<Boolean> {
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
     }
 
-    @Override
-    public void accept(Boolean newValue) {
-        try {
-            cameraManager.setTorchMode(cameraId, newValue);
+    public void onDestroy() {
+        sensorManager.unregisterListener(this);
+        if (torchCallback != null) {
+            cameraManager.unregisterTorchCallback(torchCallback);
         }
-        catch (CameraAccessException e) {
-            // e.printStackTrace();
-        }
+
     }
 }

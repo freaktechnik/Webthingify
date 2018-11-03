@@ -1,4 +1,4 @@
-package humanoids.be.webthingify;
+package be.humanoids.webthingify;
 
 import org.json.JSONObject;
 import org.mozilla.iot.webthing.Action;
@@ -12,6 +12,6 @@ class VibrateAction extends Action {
 
     @Override
     public void performAction() {
-        ((Phone)getThing()).vibrate();
+        ((Phone) getThing()).vibrate();
     }
 }
