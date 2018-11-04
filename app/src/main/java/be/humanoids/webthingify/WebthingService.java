@@ -1,5 +1,6 @@
 package be.humanoids.webthingify;
 
+import android.annotation.SuppressLint;
 import android.app.IntentService;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -11,9 +12,10 @@ import android.os.BatteryManager;
 import android.os.PowerManager;
 import android.os.Vibrator;
 
+import java.util.Objects;
+
 public class WebthingService extends IntentService {
     private BatteryManager batteryManager;
-    private IntentFilter filter;
     private Phone phone;
     private BroadcastReceiver batteryReceiver;
     private ServerTask server;
@@ -23,6 +25,7 @@ public class WebthingService extends IntentService {
         super("webthing");
     }
 
+    @SuppressLint("WakelockTimeout")
     @Override
     public void onCreate() {
         super.onCreate();
@@ -39,7 +42,7 @@ public class WebthingService extends IntentService {
                 (Vibrator) getSystemService(VIBRATOR_SERVICE)
         );
 
-        filter = new IntentFilter();
+        IntentFilter filter = new IntentFilter();
         filter.addAction(Intent.ACTION_POWER_CONNECTED);
         filter.addAction(Intent.ACTION_POWER_DISCONNECTED);
         filter.addAction(Intent.ACTION_BATTERY_CHANGED);
@@ -48,9 +51,9 @@ public class WebthingService extends IntentService {
         batteryReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                if (intent.getAction().equals(Intent.ACTION_POWER_CONNECTED)) {
+                if (Objects.equals(intent.getAction(), Intent.ACTION_POWER_CONNECTED)) {
                     phone.setCharging(true);
-                } else if (intent.getAction().equals(Intent.ACTION_POWER_DISCONNECTED)) {
+                } else if (Objects.equals(intent.getAction(), Intent.ACTION_POWER_DISCONNECTED)) {
                     phone.setCharging(false);
                 }
                 phone.setBattery(batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY));

@@ -28,7 +28,7 @@ class ServerTask extends AsyncTask<Thing, Void, WebThingServer> {
         this.server = server;
     }
 
-    public void onDestroy() {
+    void onDestroy() {
         if(server != null) {
             server.stop();
             server = null;

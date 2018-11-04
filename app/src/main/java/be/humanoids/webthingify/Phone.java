@@ -10,6 +10,7 @@ import android.hardware.camera2.CameraManager;
 import android.os.BatteryManager;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
+import android.support.annotation.NonNull;
 import android.util.Log;
 
 import org.mozilla.iot.webthing.Property;
@@ -22,13 +23,8 @@ import java.util.Map;
 
 class Phone extends Thing implements SensorEventListener {
     private final SensorManager sensorManager;
-    private final BatteryManager batteryManager;
     private final CameraManager cameraManager;
     private final Vibrator vibrator;
-    private final Sensor brightnessSensor;
-    private final Sensor proximitySensor;
-    private final Sensor pressureSensor;
-    private final Sensor humiditySensor;
     private Value<Double> brightness;
     private Value<Double> proximity;
     private Value<Double> pressure;
@@ -39,24 +35,28 @@ class Phone extends Thing implements SensorEventListener {
 
     private String cameraId = null;
 
-    public Phone(String name, SensorManager sensors, BatteryManager batteries, CameraManager cameras, Vibrator vib) {
+    Phone(String name, SensorManager sensors, BatteryManager batteries, CameraManager cameras, Vibrator vib) {
         super(name,
                 Arrays.asList("OnOffSwitch", "Light"),
                 "An Android phone"
         );
 
         sensorManager = sensors;
-        batteryManager = batteries;
         cameraManager = cameras;
         vibrator = vib;
 
         try {
             String[] cams = cameraManager.getCameraIdList();
-            for (int i = 0; i < cams.length; ++i) {
-                CameraCharacteristics characteristics = cameraManager.getCameraCharacteristics(cams[i]);
-                if (characteristics.get(CameraCharacteristics.FLASH_INFO_AVAILABLE)) {
-                    cameraId = cams[i];
-                    break;
+            for (String cam : cams) {
+                CameraCharacteristics characteristics = cameraManager.getCameraCharacteristics(cam);
+                try {
+                    if (characteristics.get(CameraCharacteristics.FLASH_INFO_AVAILABLE)) {
+                        cameraId = cam;
+                        break;
+                    }
+                }
+                catch(NullPointerException e) {
+                    Log.d("wt:cam", "No characteristics for camera ".concat(cam));
                 }
             }
             if (cameraId != null) {
@@ -74,7 +74,7 @@ class Phone extends Thing implements SensorEventListener {
                 });
                 torchCallback = new CameraManager.TorchCallback() {
                     @Override
-                    public void onTorchModeChanged(String camId, boolean enabled) {
+                    public void onTorchModeChanged(@NonNull String camId, boolean enabled) {
                         super.onTorchModeChanged(camId, enabled);
                         if (cameraId.equals(camId)) {
                             on.set(enabled);
@@ -83,7 +83,7 @@ class Phone extends Thing implements SensorEventListener {
                 };
                 cameraManager.registerTorchCallback(torchCallback, null);
 
-                addProperty(new Property(this, "on", on, onDescription));
+                addProperty(new Property<>(this, "on", on, onDescription));
             }
         } catch (CameraAccessException e) {
             Log.w("wt:flash", "Error when making flash property", e);
@@ -97,9 +97,9 @@ class Phone extends Thing implements SensorEventListener {
         batteryDescription.put("description", "Battery charge of the device");
         batteryDescription.put("readOnly", true);
 
-        battery = new Value<>(batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY));
+        battery = new Value<>(batteries.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY));
 
-        addProperty(new Property(this, "battery", battery, batteryDescription));
+        addProperty(new Property<>(this, "battery", battery, batteryDescription));
 
         Map<String, Object> chargingDescription = new HashMap<>();
         chargingDescription.put("type", "boolean");
@@ -107,11 +107,11 @@ class Phone extends Thing implements SensorEventListener {
         chargingDescription.put("label", "Charging");
         chargingDescription.put("description", "Device is plugged in and charging");
 
-        charging = new Value<>(batteryManager.isCharging());
+        charging = new Value<>(batteries.isCharging());
 
-        addProperty(new Property(this, "charging", charging, chargingDescription));
+        addProperty(new Property<>(this, "charging", charging, chargingDescription));
 
-        brightnessSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
+        Sensor brightnessSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
         if (brightnessSensor != null) {
             Map<String, Object> brightnessDescription = new HashMap<>();
             brightnessDescription.put("@type", "LevelProperty");
@@ -122,7 +122,7 @@ class Phone extends Thing implements SensorEventListener {
 
             brightness = new Value<>(0.0);
 
-            addProperty(new Property(this, "brightness", brightness, brightnessDescription));
+            addProperty(new Property<>(this, "brightness", brightness, brightnessDescription));
             sensorManager.registerListener(this, brightnessSensor, SensorManager.SENSOR_DELAY_NORMAL);
         }
 
@@ -134,9 +134,9 @@ class Phone extends Thing implements SensorEventListener {
 
         Value<Double> loudness = new Value<>(0.0);
 
-        addProperty(new Property(this, "loudness", loudness, loudnessDescription));
+        addProperty(new Property<>(this, "loudness", loudness, loudnessDescription));
 
-        proximitySensor = sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
+        Sensor proximitySensor = sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
         if (proximitySensor != null) {
             Map<String, Object> proximityDescription = new HashMap<>();
             proximityDescription.put("type", "number");
@@ -146,11 +146,11 @@ class Phone extends Thing implements SensorEventListener {
 
             proximity = new Value<>(0.0);
 
-            addProperty(new Property(this, "proximity", proximity, proximityDescription));
+            addProperty(new Property<>(this, "proximity", proximity, proximityDescription));
             sensorManager.registerListener(this, proximitySensor, SensorManager.SENSOR_DELAY_NORMAL);
         }
 
-        pressureSensor = sensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE);
+        Sensor pressureSensor = sensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE);
         if (pressureSensor != null) {
             Map<String, Object> pressureDescription = new HashMap<>();
             pressureDescription.put("type", "number");
@@ -160,11 +160,11 @@ class Phone extends Thing implements SensorEventListener {
 
             pressure = new Value<>(0.0);
 
-            addProperty(new Property(this, "pressure", pressure, pressureDescription));
+            addProperty(new Property<>(this, "pressure", pressure, pressureDescription));
             sensorManager.registerListener(this, pressureSensor, SensorManager.SENSOR_DELAY_NORMAL);
         }
 
-        humiditySensor = sensorManager.getDefaultSensor(Sensor.TYPE_RELATIVE_HUMIDITY);
+        Sensor humiditySensor = sensorManager.getDefaultSensor(Sensor.TYPE_RELATIVE_HUMIDITY);
         if (humiditySensor != null) {
             Map<String, Object> humidityDescription = new HashMap<>();
             humidityDescription.put("@type", "LevelProperty");
@@ -175,7 +175,7 @@ class Phone extends Thing implements SensorEventListener {
 
             humidity = new Value<>(0.0);
 
-            addProperty(new Property(this, "humidity", humidity, humidityDescription));
+            addProperty(new Property<>(this, "humidity", humidity, humidityDescription));
             sensorManager.registerListener(this, humiditySensor, SensorManager.SENSOR_DELAY_NORMAL);
         }
 
@@ -188,15 +188,15 @@ class Phone extends Thing implements SensorEventListener {
         addAvailableAction("vibrate", vibrateDescription, VibrateAction.class);
     }
 
-    public void vibrate() {
+    void vibrate() {
         vibrator.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE));
     }
 
-    public void setCharging(boolean isCharging) {
+    void setCharging(boolean isCharging) {
         charging.set(isCharging);
     }
 
-    public void setBattery(int batteryPercentage) {
+    void setBattery(int batteryPercentage) {
         battery.set(batteryPercentage);
     }
 
@@ -222,7 +222,7 @@ class Phone extends Thing implements SensorEventListener {
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
     }
 
-    public void onDestroy() {
+    void onDestroy() {
         sensorManager.unregisterListener(this);
         if (torchCallback != null) {
             cameraManager.unregisterTorchCallback(torchCallback);
