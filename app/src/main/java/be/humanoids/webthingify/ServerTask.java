@@ -1,6 +1,8 @@
 package be.humanoids.webthingify;
 
 import android.os.AsyncTask;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import org.mozilla.iot.webthing.Thing;
@@ -9,7 +11,17 @@ import org.mozilla.iot.webthing.WebThingServer;
 import java.io.IOException;
 
 class ServerTask extends AsyncTask<Thing, Void, WebThingServer> {
-    private WebThingServer server;
+    private @Nullable WebThingServer server;
+    private final ResultHandler delegate;
+
+    public interface ResultHandler {
+        void handleResult(boolean isRunning);
+    }
+
+    ServerTask(@NonNull ResultHandler handler) {
+        super();
+        this.delegate = handler;
+    }
 
     @Override
     protected WebThingServer doInBackground(Thing... things) {
@@ -24,8 +36,9 @@ class ServerTask extends AsyncTask<Thing, Void, WebThingServer> {
         return null;
     }
 
-    protected void onPostExecute(WebThingServer server) {
+    protected void onPostExecute(@Nullable WebThingServer server) {
         this.server = server;
+        this.delegate.handleResult(server != null);
     }
 
     void onDestroy() {

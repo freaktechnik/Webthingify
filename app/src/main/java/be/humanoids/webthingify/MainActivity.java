@@ -1,5 +1,7 @@
 package be.humanoids.webthingify;
 
+import android.app.ActivityManager;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -14,7 +16,7 @@ public class MainActivity extends AppCompatActivity {
         Switch toggle = findViewById(R.id.switch1);
         toggle.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (isChecked) {
-                startService(new Intent(this, WebthingService.class));
+                startForegroundService(new Intent(this, WebthingService.class));
             } else {
                 stopService(new Intent(this, WebthingService.class));
             }
