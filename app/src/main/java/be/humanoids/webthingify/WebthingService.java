@@ -1,11 +1,11 @@
 package be.humanoids.webthingify;
 
 import android.annotation.SuppressLint;
-import android.app.IntentService;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -13,13 +13,16 @@ import android.content.IntentFilter;
 import android.hardware.SensorManager;
 import android.hardware.camera2.CameraManager;
 import android.os.BatteryManager;
+import android.os.Binder;
 import android.os.Build;
+import android.os.IBinder;
 import android.os.PowerManager;
 import android.os.Vibrator;
+import android.util.Log;
 
 import java.util.Objects;
 
-public class WebthingService extends IntentService {
+public class WebthingService extends Service {
     private static final String CHANNEL_ID = "wt:service";
     private static final String STOP_SELF_ACTION ="wt:service:stopself";
     private BatteryManager batteryManager;
@@ -27,16 +30,16 @@ public class WebthingService extends IntentService {
     private BroadcastReceiver batteryReceiver;
     private ServerTask server;
     private PowerManager.WakeLock wakeLock;
+    private final IBinder binder = new LocalBinder();
 
-    public WebthingService() {
-        super("webthing");
+    public class LocalBinder extends Binder {
+        public WebthingService getService() {
+            return WebthingService.this;
+        }
     }
 
-    @SuppressLint("WakelockTimeout")
     @Override
-    public void onCreate() {
-        super.onCreate();
-
+    public int onStartCommand(Intent intent, int flags, int startId) {
         createNotificationChannel();
         Intent stopSelfIntent = new Intent(this, WebthingService.class);
         stopSelfIntent.setAction(STOP_SELF_ACTION);
@@ -47,6 +50,14 @@ public class WebthingService extends IntentService {
                 .addAction(notificationAction)
                 .build();
         startForeground(1, notification);
+
+        return START_STICKY;
+    }
+
+    @SuppressLint("WakelockTimeout")
+    @Override
+    public void onCreate() {
+        super.onCreate();
 
         if(server != null) {
             return;
@@ -81,6 +92,7 @@ public class WebthingService extends IntentService {
         registerReceiver(batteryReceiver, filter);
 
         server = new ServerTask(isRunning -> {
+            Log.d("wt:service", isRunning ? "isRunning" : "failed to start");
             if(!isRunning) {
                 stopSelf();
             }
@@ -95,6 +107,8 @@ public class WebthingService extends IntentService {
 
     @Override
     public void onDestroy() {
+        super.onDestroy();
+        Log.d("wt:service", "destroy");
         if(wakeLock != null) {
             wakeLock.release();
             wakeLock = null;
@@ -105,27 +119,24 @@ public class WebthingService extends IntentService {
         batteryReceiver = null;
         phone.onDestroy();
         phone = null;
-        super.onDestroy();
+        stopForeground(true);
     }
 
     @Override
-    protected void onHandleIntent(Intent intent) {
-        if(intent.getAction() == STOP_SELF_ACTION) {
+    public IBinder onBind(Intent intent) {
+        if(Objects.equals(intent.getAction(), STOP_SELF_ACTION)) {
             stopSelf();
         }
+        return binder;
     }
 
     private void createNotificationChannel() {
-        // Create the NotificationChannel, but only on API 26+ because
-        // the NotificationChannel class is new and not in the support library
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            int importance = NotificationManager.IMPORTANCE_LOW;
-            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, "Web thing service", importance);
-            channel.setDescription("Web thing service notifications");
-            // Register the channel with the system; you can't change the importance
-            // or other notification behaviors after this
-            NotificationManager notificationManager = getSystemService(NotificationManager.class);
-            notificationManager.createNotificationChannel(channel);
-        }
+        int importance = NotificationManager.IMPORTANCE_LOW;
+        NotificationChannel channel = new NotificationChannel(CHANNEL_ID, "Web thing service", importance);
+        channel.setDescription("Web thing service notifications");
+        // Register the channel with the system; you can't change the importance
+        // or other notification behaviors after this
+        NotificationManager notificationManager = getSystemService(NotificationManager.class);
+        notificationManager.createNotificationChannel(channel);
     }
 }

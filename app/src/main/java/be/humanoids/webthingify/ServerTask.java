@@ -13,6 +13,7 @@ import java.io.IOException;
 class ServerTask extends AsyncTask<Thing, Void, WebThingServer> {
     private @Nullable WebThingServer server;
     private final ResultHandler delegate;
+    private boolean shouldBeRunning = true;
 
     public interface ResultHandler {
         void handleResult(boolean isRunning);
@@ -38,13 +39,20 @@ class ServerTask extends AsyncTask<Thing, Void, WebThingServer> {
 
     protected void onPostExecute(@Nullable WebThingServer server) {
         this.server = server;
-        this.delegate.handleResult(server != null);
+        if(!shouldBeRunning) {
+            onDestroy();
+        }
+        else {
+            this.delegate.handleResult(server != null);
+        }
     }
 
     void onDestroy() {
+        shouldBeRunning = false;
         if(server != null) {
             server.stop();
             server = null;
+            Log.i("wt:server", "stopped");
         }
     }
 }
