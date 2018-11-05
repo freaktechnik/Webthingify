@@ -1,4 +1,4 @@
-package humanoids.be.webthingify;
+package be.humanoids.webthingify;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;
