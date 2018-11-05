@@ -1,4 +1,4 @@
-package humanoids.be.webthingify;
+package be.humanoids.webthingify;
 
 import org.junit.Test;
 
