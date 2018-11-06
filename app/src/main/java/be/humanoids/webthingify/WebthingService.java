@@ -10,43 +10,51 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Icon;
 import android.hardware.SensorManager;
 import android.hardware.camera2.CameraManager;
 import android.os.BatteryManager;
 import android.os.Binder;
-import android.os.Build;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.os.Vibrator;
+import android.provider.Settings;
 import android.util.Log;
 
 import java.util.Objects;
 
 public class WebthingService extends Service {
     private static final String CHANNEL_ID = "wt:service";
-    private static final String STOP_SELF_ACTION ="wt:service:stopself";
+    private static final String STOP_SELF_ACTION = "wt:service:stopself";
+    private final IBinder binder = new LocalBinder();
     private BatteryManager batteryManager;
     private Phone phone;
     private BroadcastReceiver batteryReceiver;
     private ServerTask server;
     private PowerManager.WakeLock wakeLock;
-    private final IBinder binder = new LocalBinder();
-
-    public class LocalBinder extends Binder {
-        public WebthingService getService() {
-            return WebthingService.this;
-        }
-    }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        if(Objects.equals(intent.getAction(), STOP_SELF_ACTION)) {
+            stopSelf();
+            return START_NOT_STICKY;
+        }
         createNotificationChannel();
         Intent stopSelfIntent = new Intent(this, WebthingService.class);
         stopSelfIntent.setAction(STOP_SELF_ACTION);
-        Notification.Action notificationAction = new Notification.Action.Builder(null, "Stop", PendingIntent.getService(this, 0, stopSelfIntent, PendingIntent.FLAG_CANCEL_CURRENT)).build();
+        Notification.Action notificationAction = new Notification.Action.Builder(
+                Icon.createWithResource(this, android.R.drawable.ic_menu_close_clear_cancel),
+                "Stop",
+                PendingIntent.getService(this, 0, stopSelfIntent, PendingIntent.FLAG_CANCEL_CURRENT)
+        ).build();
         Notification notification = new Notification.Builder(this, CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_launcher_foreground)
                 .setContentTitle("Web thing server")
                 .setContentText("Web thing server is running")
+                .setCategory(Notification.CATEGORY_SERVICE)
+                .setLocalOnly(true)
+                .setOngoing(true)
                 .addAction(notificationAction)
                 .build();
         startForeground(1, notification);
@@ -59,13 +67,13 @@ public class WebthingService extends Service {
     public void onCreate() {
         super.onCreate();
 
-        if(server != null) {
+        if (server != null) {
             return;
         }
         batteryManager = (BatteryManager) getSystemService(BATTERY_SERVICE);
 
         phone = new Phone(
-                "Put Phone Name Here",
+                Settings.Global.getString(getContentResolver(), Settings.Global.DEVICE_NAME),
                 (SensorManager) getSystemService(SENSOR_SERVICE),
                 batteryManager,
                 (CameraManager) getSystemService(CAMERA_SERVICE),
@@ -93,14 +101,14 @@ public class WebthingService extends Service {
 
         server = new ServerTask(isRunning -> {
             Log.d("wt:service", isRunning ? "isRunning" : "failed to start");
-            if(!isRunning) {
+            if (!isRunning) {
                 stopSelf();
             }
         });
         server.execute(phone);
         //TODO stopSelf if server isn't started and turn off switch
 
-        PowerManager pm = (PowerManager)getSystemService(Context.POWER_SERVICE);
+        PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
         wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "Webthingify:Server");
         wakeLock.acquire();
     }
@@ -109,7 +117,7 @@ public class WebthingService extends Service {
     public void onDestroy() {
         super.onDestroy();
         Log.d("wt:service", "destroy");
-        if(wakeLock != null) {
+        if (wakeLock != null) {
             wakeLock.release();
             wakeLock = null;
         }
@@ -124,9 +132,6 @@ public class WebthingService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
-        if(Objects.equals(intent.getAction(), STOP_SELF_ACTION)) {
-            stopSelf();
-        }
         return binder;
     }
 
@@ -134,9 +139,15 @@ public class WebthingService extends Service {
         int importance = NotificationManager.IMPORTANCE_LOW;
         NotificationChannel channel = new NotificationChannel(CHANNEL_ID, "Web thing service", importance);
         channel.setDescription("Web thing service notifications");
-        // Register the channel with the system; you can't change the importance
-        // or other notification behaviors after this
+        channel.setImportance(NotificationManager.IMPORTANCE_LOW);
+        channel.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
         NotificationManager notificationManager = getSystemService(NotificationManager.class);
         notificationManager.createNotificationChannel(channel);
+    }
+
+    public class LocalBinder extends Binder {
+        public WebthingService getService() {
+            return WebthingService.this;
+        }
     }
 }

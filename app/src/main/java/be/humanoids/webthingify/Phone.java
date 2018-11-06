@@ -21,8 +21,6 @@ import org.mozilla.iot.webthing.Thing;
 import org.mozilla.iot.webthing.Value;
 
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 
 class Phone extends Thing implements SensorEventListener {
     private final SensorManager sensorManager;
@@ -40,8 +38,8 @@ class Phone extends Thing implements SensorEventListener {
 
     Phone(String name, SensorManager sensors, BatteryManager batteries, CameraManager cameras, Vibrator vib) {
         super(name,
-              new JSONArray(Arrays.asList("OnOffSwitch", "Light")),
-              "An Android phone"
+                new JSONArray(Arrays.asList("OnOffSwitch", "Light")),
+                "An Android phone"
         );
 
         sensorManager = sensors;
@@ -57,8 +55,7 @@ class Phone extends Thing implements SensorEventListener {
                         cameraId = cam;
                         break;
                     }
-                }
-                catch(NullPointerException e) {
+                } catch (NullPointerException e) {
                     Log.d("wt:cam", "No characteristics for camera ".concat(cam));
                 }
             }
@@ -204,7 +201,7 @@ class Phone extends Thing implements SensorEventListener {
                 humidityDescription.put("type", "number");
                 humidityDescription.put("readOnly", true);
                 humidityDescription.put("unit", "percent");
-                humidityDescription.put("label", "Pressure");
+                humidityDescription.put("label", "Humidity");
             } catch (JSONException e) {
                 Log.e("wt:build", "Failed to build property description", e);
             }
