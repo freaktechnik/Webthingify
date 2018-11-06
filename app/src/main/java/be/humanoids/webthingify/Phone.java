@@ -13,6 +13,9 @@ import android.os.Vibrator;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.mozilla.iot.webthing.Property;
 import org.mozilla.iot.webthing.Thing;
 import org.mozilla.iot.webthing.Value;
@@ -37,8 +40,8 @@ class Phone extends Thing implements SensorEventListener {
 
     Phone(String name, SensorManager sensors, BatteryManager batteries, CameraManager cameras, Vibrator vib) {
         super(name,
-                Arrays.asList("OnOffSwitch", "Light"),
-                "An Android phone"
+              new JSONArray(Arrays.asList("OnOffSwitch", "Light")),
+              "An Android phone"
         );
 
         sensorManager = sensors;
@@ -60,11 +63,16 @@ class Phone extends Thing implements SensorEventListener {
                 }
             }
             if (cameraId != null) {
-                Map<String, Object> onDescription = new HashMap<>();
-                onDescription.put("@type", "OnOffProperty");
-                onDescription.put("label", "Flashlight On/Off");
-                onDescription.put("type", "boolean");
-                onDescription.put("description", "Whether the flashlight is turned on");
+                JSONObject onDescription = new JSONObject();
+                try {
+                    onDescription.put("@type", "OnOffProperty");
+                    onDescription.put("label", "Flashlight On/Off");
+                    onDescription.put("type", "boolean");
+                    onDescription.put("description", "Whether the flashlight is turned on");
+                } catch (JSONException e) {
+                    Log.e("wt:build", "Failed to build property description", e);
+                }
+
                 final Value<Boolean> on = new Value<>(true, newValue -> {
                     try {
                         cameraManager.setTorchMode(cameraId, newValue);
@@ -89,23 +97,31 @@ class Phone extends Thing implements SensorEventListener {
             Log.w("wt:flash", "Error when making flash property", e);
         }
 
-        Map<String, Object> batteryDescription = new HashMap<>();
-        batteryDescription.put("@type", "LevelProperty");
-        batteryDescription.put("label", "Battery");
-        batteryDescription.put("unit", "percent");
-        batteryDescription.put("type", "number");
-        batteryDescription.put("description", "Battery charge of the device");
-        batteryDescription.put("readOnly", true);
+        JSONObject batteryDescription = new JSONObject();
+        try {
+            batteryDescription.put("@type", "LevelProperty");
+            batteryDescription.put("label", "Battery");
+            batteryDescription.put("unit", "percent");
+            batteryDescription.put("type", "number");
+            batteryDescription.put("description", "Battery charge of the device");
+            batteryDescription.put("readOnly", true);
+        } catch (JSONException e) {
+            Log.e("wt:build", "Failed to build property description", e);
+        }
 
         battery = new Value<>(batteries.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY));
 
         addProperty(new Property<>(this, "battery", battery, batteryDescription));
 
-        Map<String, Object> chargingDescription = new HashMap<>();
-        chargingDescription.put("type", "boolean");
-        chargingDescription.put("readOnly", true);
-        chargingDescription.put("label", "Charging");
-        chargingDescription.put("description", "Device is plugged in and charging");
+        JSONObject chargingDescription = new JSONObject();
+        try {
+            chargingDescription.put("type", "boolean");
+            chargingDescription.put("readOnly", true);
+            chargingDescription.put("label", "Charging");
+            chargingDescription.put("description", "Device is plugged in and charging");
+        } catch (JSONException e) {
+            Log.e("wt:build", "Failed to build property description", e);
+        }
 
         charging = new Value<>(batteries.isCharging());
 
@@ -113,12 +129,16 @@ class Phone extends Thing implements SensorEventListener {
 
         Sensor brightnessSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
         if (brightnessSensor != null) {
-            Map<String, Object> brightnessDescription = new HashMap<>();
-            brightnessDescription.put("@type", "LevelProperty");
-            brightnessDescription.put("type", "number");
-            brightnessDescription.put("readOnly", true);
-            brightnessDescription.put("label", "Brightness");
-            brightnessDescription.put("unit", "lux");
+            JSONObject brightnessDescription = new JSONObject();
+            try {
+                brightnessDescription.put("@type", "LevelProperty");
+                brightnessDescription.put("type", "number");
+                brightnessDescription.put("readOnly", true);
+                brightnessDescription.put("label", "Brightness");
+                brightnessDescription.put("unit", "lux");
+            } catch (JSONException e) {
+                Log.e("wt:build", "Failed to build property description", e);
+            }
 
             brightness = new Value<>(0.0);
 
@@ -126,11 +146,15 @@ class Phone extends Thing implements SensorEventListener {
             sensorManager.registerListener(this, brightnessSensor, SensorManager.SENSOR_DELAY_NORMAL);
         }
 
-        Map<String, Object> loudnessDescription = new HashMap<>();
-        loudnessDescription.put("type", "number");
-        loudnessDescription.put("unit", "decibel");
-        loudnessDescription.put("readOnly", true);
-        loudnessDescription.put("label", "Loudness");
+        JSONObject loudnessDescription = new JSONObject();
+        try {
+            loudnessDescription.put("type", "number");
+            loudnessDescription.put("unit", "decibel");
+            loudnessDescription.put("readOnly", true);
+            loudnessDescription.put("label", "Loudness");
+        } catch (JSONException e) {
+            Log.e("wt:build", "Failed to build property description", e);
+        }
 
         Value<Double> loudness = new Value<>(0.0);
 
@@ -138,11 +162,15 @@ class Phone extends Thing implements SensorEventListener {
 
         Sensor proximitySensor = sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
         if (proximitySensor != null) {
-            Map<String, Object> proximityDescription = new HashMap<>();
-            proximityDescription.put("type", "number");
-            proximityDescription.put("readOnly", true);
-            proximityDescription.put("label", "Proximity");
-            proximityDescription.put("unit", "centimeter");
+            JSONObject proximityDescription = new JSONObject();
+            try {
+                proximityDescription.put("type", "number");
+                proximityDescription.put("readOnly", true);
+                proximityDescription.put("label", "Proximity");
+                proximityDescription.put("unit", "centimeter");
+            } catch (JSONException e) {
+                Log.e("wt:build", "Failed to build property description", e);
+            }
 
             proximity = new Value<>(0.0);
 
@@ -152,11 +180,15 @@ class Phone extends Thing implements SensorEventListener {
 
         Sensor pressureSensor = sensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE);
         if (pressureSensor != null) {
-            Map<String, Object> pressureDescription = new HashMap<>();
-            pressureDescription.put("type", "number");
-            pressureDescription.put("readOnly", true);
-            pressureDescription.put("unit", "hectopascal");
-            pressureDescription.put("label", "Pressure");
+            JSONObject pressureDescription = new JSONObject();
+            try {
+                pressureDescription.put("type", "number");
+                pressureDescription.put("readOnly", true);
+                pressureDescription.put("unit", "hectopascal");
+                pressureDescription.put("label", "Pressure");
+            } catch (JSONException e) {
+                Log.e("wt:build", "Failed to build property description", e);
+            }
 
             pressure = new Value<>(0.0);
 
@@ -166,12 +198,16 @@ class Phone extends Thing implements SensorEventListener {
 
         Sensor humiditySensor = sensorManager.getDefaultSensor(Sensor.TYPE_RELATIVE_HUMIDITY);
         if (humiditySensor != null) {
-            Map<String, Object> humidityDescription = new HashMap<>();
-            humidityDescription.put("@type", "LevelProperty");
-            humidityDescription.put("type", "number");
-            humidityDescription.put("readOnly", true);
-            humidityDescription.put("unit", "percent");
-            humidityDescription.put("label", "Pressure");
+            JSONObject humidityDescription = new JSONObject();
+            try {
+                humidityDescription.put("@type", "LevelProperty");
+                humidityDescription.put("type", "number");
+                humidityDescription.put("readOnly", true);
+                humidityDescription.put("unit", "percent");
+                humidityDescription.put("label", "Pressure");
+            } catch (JSONException e) {
+                Log.e("wt:build", "Failed to build property description", e);
+            }
 
             humidity = new Value<>(0.0);
 
@@ -183,8 +219,13 @@ class Phone extends Thing implements SensorEventListener {
         //TODO add property for camera
         //TODO action to take snapshot
 
-        Map<String, Object> vibrateDescription = new HashMap<>();
-        vibrateDescription.put("label", "Vibrate");
+        JSONObject vibrateDescription = new JSONObject();
+        try {
+            vibrateDescription.put("label", "Vibrate");
+        } catch (JSONException e) {
+            Log.e("wt:build", "Failed to build property description", e);
+        }
+
         addAvailableAction("vibrate", vibrateDescription, VibrateAction.class);
     }
 
