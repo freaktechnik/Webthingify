@@ -27,7 +27,7 @@ class ServerTask extends AsyncTask<Thing, Void, WebThingServer> {
     @Override
     protected WebThingServer doInBackground(Thing... things) {
         try {
-            WebThingServer server = new WebThingServer(new WebThingServer.SingleThing(things[0]), 0);
+            WebThingServer server = new WebThingServer(new WebThingServer.SingleThing(things[0]), 8088);
             server.start(false);
             Log.i("wt:server", Integer.toString(server.getListeningPort()));
             return server;
