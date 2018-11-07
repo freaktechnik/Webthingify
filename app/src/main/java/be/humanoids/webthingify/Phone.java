@@ -33,6 +33,7 @@ class Phone extends Thing implements SensorEventListener {
     private Value<Float> temperature;
     private Value<Integer> battery;
     private Value<Boolean> charging;
+    private Value<Boolean> inMotion;
     private CameraManager.TorchCallback torchCallback = null;
 
     private String cameraId = null;
@@ -231,6 +232,26 @@ class Phone extends Thing implements SensorEventListener {
             sensorManager.registerListener(this, temperatureSensor, SensorManager.SENSOR_DELAY_NORMAL);
         }
 
+        Sensor inMotionSensor = sensorManager.getDefaultSensor(Sensor.TYPE_MOTION_DETECT);
+        Sensor stationarySensor = sensorManager.getDefaultSensor(Sensor.TYPE_STATIONARY_DETECT);
+
+        if (inMotionSensor != null && stationarySensor != null) {
+            JSONObject motionDescription = new JSONObject();
+            try {
+                motionDescription.put("type", "boolean");
+                motionDescription.put("readOnly", true);
+                motionDescription.put("label", "In motion");
+            } catch (JSONException e) {
+                Log.e("wt:build", "Failed to build property description", e);
+            }
+
+            inMotion = new Value<>(false);
+
+            addProperty(new Property<>(this, "inMotion", inMotion, motionDescription));
+            sensorManager.registerListener(this, inMotionSensor, SensorManager.SENSOR_DELAY_NORMAL);
+            sensorManager.registerListener(this, stationarySensor, SensorManager.SENSOR_DELAY_NORMAL);
+        }
+
         //TODO ambient temp?
         //TODO add property for camera
         //TODO action to take snapshot
@@ -274,6 +295,12 @@ class Phone extends Thing implements SensorEventListener {
                 break;
             case Sensor.TYPE_AMBIENT_TEMPERATURE:
                 temperature.set(event.values[0]);
+                break;
+            case Sensor.TYPE_MOTION_DETECT:
+                inMotion.set(true);
+                break;
+            case Sensor.TYPE_STATIONARY_DETECT:
+                inMotion.set(false);
                 break;
         }
     }
