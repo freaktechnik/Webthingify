@@ -26,10 +26,11 @@ class Phone extends Thing implements SensorEventListener {
     private final SensorManager sensorManager;
     private final CameraManager cameraManager;
     private final Vibrator vibrator;
-    private Value<Double> brightness;
-    private Value<Double> proximity;
-    private Value<Double> pressure;
-    private Value<Double> humidity;
+    private Value<Float> brightness;
+    private Value<Float> proximity;
+    private Value<Float> pressure;
+    private Value<Float> humidity;
+    private Value<Float> temperature;
     private Value<Integer> battery;
     private Value<Boolean> charging;
     private CameraManager.TorchCallback torchCallback = null;
@@ -137,7 +138,7 @@ class Phone extends Thing implements SensorEventListener {
                 Log.e("wt:build", "Failed to build property description", e);
             }
 
-            brightness = new Value<>(0.0);
+            brightness = new Value<>(0.0f);
 
             addProperty(new Property<>(this, "brightness", brightness, brightnessDescription));
             sensorManager.registerListener(this, brightnessSensor, SensorManager.SENSOR_DELAY_NORMAL);
@@ -153,7 +154,7 @@ class Phone extends Thing implements SensorEventListener {
             Log.e("wt:build", "Failed to build property description", e);
         }
 
-        Value<Double> loudness = new Value<>(0.0);
+        Value<Float> loudness = new Value<>(0.0f);
 
         addProperty(new Property<>(this, "loudness", loudness, loudnessDescription));
 
@@ -169,7 +170,7 @@ class Phone extends Thing implements SensorEventListener {
                 Log.e("wt:build", "Failed to build property description", e);
             }
 
-            proximity = new Value<>(0.0);
+            proximity = new Value<>(0.0f);
 
             addProperty(new Property<>(this, "proximity", proximity, proximityDescription));
             sensorManager.registerListener(this, proximitySensor, SensorManager.SENSOR_DELAY_NORMAL);
@@ -187,7 +188,7 @@ class Phone extends Thing implements SensorEventListener {
                 Log.e("wt:build", "Failed to build property description", e);
             }
 
-            pressure = new Value<>(0.0);
+            pressure = new Value<>(0.0f);
 
             addProperty(new Property<>(this, "pressure", pressure, pressureDescription));
             sensorManager.registerListener(this, pressureSensor, SensorManager.SENSOR_DELAY_NORMAL);
@@ -206,10 +207,28 @@ class Phone extends Thing implements SensorEventListener {
                 Log.e("wt:build", "Failed to build property description", e);
             }
 
-            humidity = new Value<>(0.0);
+            humidity = new Value<>(0.0f);
 
             addProperty(new Property<>(this, "humidity", humidity, humidityDescription));
             sensorManager.registerListener(this, humiditySensor, SensorManager.SENSOR_DELAY_NORMAL);
+        }
+
+        Sensor temperatureSensor = sensorManager.getDefaultSensor(Sensor.TYPE_AMBIENT_TEMPERATURE);
+        if (temperatureSensor != null) {
+            JSONObject temperatureDescription = new JSONObject();
+            try {
+                temperatureDescription.put("type", "number");
+                temperatureDescription.put("readOnly", true);
+                temperatureDescription.put("unit", "celsius");
+                temperatureDescription.put("label", "Temperature");
+            } catch (JSONException e) {
+                Log.e("wt:build", "Failed to build property description", e);
+            }
+
+            temperature = new Value<>(0.0f);
+
+            addProperty(new Property<>(this, "temperature", temperature, temperatureDescription));
+            sensorManager.registerListener(this, temperatureSensor, SensorManager.SENSOR_DELAY_NORMAL);
         }
 
         //TODO ambient temp?
@@ -242,16 +261,19 @@ class Phone extends Thing implements SensorEventListener {
     public void onSensorChanged(SensorEvent event) {
         switch (event.sensor.getType()) {
             case Sensor.TYPE_LIGHT:
-                brightness.set((double) event.values[0]);
+                brightness.set(event.values[0]);
                 break;
             case Sensor.TYPE_PRESSURE:
-                pressure.set((double) event.values[0]);
+                pressure.set(event.values[0]);
                 break;
             case Sensor.TYPE_PROXIMITY:
-                proximity.set((double) event.values[0]);
+                proximity.set(event.values[0]);
                 break;
             case Sensor.TYPE_RELATIVE_HUMIDITY:
-                humidity.set((double) event.values[0]);
+                humidity.set(event.values[0]);
+                break;
+            case Sensor.TYPE_AMBIENT_TEMPERATURE:
+                temperature.set(event.values[0]);
                 break;
         }
     }
