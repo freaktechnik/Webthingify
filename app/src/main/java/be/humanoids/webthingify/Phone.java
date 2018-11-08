@@ -125,6 +125,7 @@ class Phone extends Thing implements SensorEventListener {
                 }
                 final Value<Boolean> on = new Value<>(false, newValue -> {
                     try {
+                        Log.i("wt:torch", "Updating torch state to " + (newValue ? "on" : "off"));
                         cameraManager.setTorchMode(cameraId, newValue);
                     } catch (CameraAccessException e) {
                         Log.e("wt:torch", "Could not set torch state", e);
@@ -134,10 +135,10 @@ class Phone extends Thing implements SensorEventListener {
                     @Override
                     public void onTorchModeChanged(@NonNull String camId, boolean enabled) {
                         super.onTorchModeChanged(camId, enabled);
-                        if (cameraId.equals(camId) && !Objects.equals(on.get(), enabled)) {
+                        if (cameraId.equals(camId) && on.get() != enabled) {
+                            Log.i("wt:torch", "Updating property state to " + (enabled ? "on" : "off"));
                             on.updateRemote(enabled);
                         }
-
                     }
                 };
                 cameraManager.registerTorchCallback(torchCallback, null);
