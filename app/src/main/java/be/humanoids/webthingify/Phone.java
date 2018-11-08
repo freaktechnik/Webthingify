@@ -7,6 +7,7 @@ import android.hardware.SensorManager;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraManager;
+import android.media.MediaRecorder;
 import android.os.BatteryManager;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
@@ -20,9 +21,13 @@ import org.mozilla.iot.webthing.Property;
 import org.mozilla.iot.webthing.Thing;
 import org.mozilla.iot.webthing.Value;
 
+import java.io.IOException;
 import java.util.Arrays;
+import java.util.Timer;
+import java.util.TimerTask;
 
 class Phone extends Thing implements SensorEventListener {
+    private static final double MAX_AMPLITUDE = 32767.0;
     private final SensorManager sensorManager;
     private final CameraManager cameraManager;
     private final Vibrator vibrator;
@@ -31,14 +36,17 @@ class Phone extends Thing implements SensorEventListener {
     private Value<Float> pressure;
     private Value<Float> humidity;
     private Value<Float> temperature;
+    private Value<Float> loudness;
     private Value<Integer> battery;
     private Value<Boolean> charging;
     private Value<Boolean> inMotion;
     private CameraManager.TorchCallback torchCallback = null;
+    private MediaRecorder recorder = null;
+    private Timer loudnessTimer = null;
 
     private String cameraId = null;
 
-    Phone(String name, SensorManager sensors, BatteryManager batteries, CameraManager cameras, Vibrator vib) {
+    Phone(String name, SensorManager sensors, BatteryManager batteries, CameraManager cameras, Vibrator vib, boolean canRecordAudio) {
         super(name,
                 new JSONArray(Arrays.asList("OnOffSwitch", "Light")),
                 "An Android phone"
@@ -47,6 +55,44 @@ class Phone extends Thing implements SensorEventListener {
         sensorManager = sensors;
         cameraManager = cameras;
         vibrator = vib;
+
+        if (canRecordAudio) {
+            recorder = new MediaRecorder();
+            recorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+            recorder.setOutputFormat(MediaRecorder.OutputFormat.DEFAULT);
+            recorder.setAudioEncoder(MediaRecorder.AudioEncoder.DEFAULT);
+            recorder.setOutputFile("/dev/null");
+            loudnessTimer = new Timer();
+            try {
+                recorder.prepare();
+                recorder.start();
+
+                JSONObject loudnessDescription = new JSONObject();
+                try {
+                    loudnessDescription.put("type", "number");
+                    loudnessDescription.put("unit", "decibel");
+                    loudnessDescription.put("readOnly", true);
+                    loudnessDescription.put("label", "Loudness");
+                } catch (JSONException e) {
+                    Log.e("wt:build", "Failed to build property description", e);
+                }
+
+                loudness = new Value<>(0.0f);
+
+                addProperty(new Property<>(this, "loudness", loudness, loudnessDescription));
+                loudnessTimer.scheduleAtFixedRate(new TimerTask() {
+                    @Override
+                    public void run() {
+                        updateLoudness();
+                    }
+                }, 0, 1000);
+            } catch (IOException e) {
+                Log.e("wt:build", "Error starting recorder", e);
+                recorder.stop();
+                recorder.release();
+                recorder = null;
+            }
+        }
 
         try {
             String[] cams = cameraManager.getCameraIdList();
@@ -144,20 +190,6 @@ class Phone extends Thing implements SensorEventListener {
             addProperty(new Property<>(this, "brightness", brightness, brightnessDescription));
             sensorManager.registerListener(this, brightnessSensor, SensorManager.SENSOR_DELAY_NORMAL);
         }
-
-        JSONObject loudnessDescription = new JSONObject();
-        try {
-            loudnessDescription.put("type", "number");
-            loudnessDescription.put("unit", "decibel");
-            loudnessDescription.put("readOnly", true);
-            loudnessDescription.put("label", "Loudness");
-        } catch (JSONException e) {
-            Log.e("wt:build", "Failed to build property description", e);
-        }
-
-        Value<Float> loudness = new Value<>(0.0f);
-
-        addProperty(new Property<>(this, "loudness", loudness, loudnessDescription));
 
         Sensor proximitySensor = sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
         if (proximitySensor != null) {
@@ -311,9 +343,23 @@ class Phone extends Thing implements SensorEventListener {
 
     void onDestroy() {
         sensorManager.unregisterListener(this);
+        if (recorder != null) {
+            recorder.stop();
+            recorder.release();
+        }
+        if (loudnessTimer != null) {
+            loudnessTimer.cancel();
+        }
         if (torchCallback != null) {
             cameraManager.unregisterTorchCallback(torchCallback);
         }
+    }
 
+    private void updateLoudness() {
+        int amplitude = recorder.getMaxAmplitude();
+        if(amplitude != 0) {
+            double db = 20.0 * Math.log10((double) amplitude / MAX_AMPLITUDE);
+            loudness.set((float) db);
+        }
     }
 }

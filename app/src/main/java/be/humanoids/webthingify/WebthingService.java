@@ -1,5 +1,6 @@
 package be.humanoids.webthingify;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -10,6 +11,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Icon;
 import android.hardware.SensorManager;
@@ -77,7 +79,8 @@ public class WebthingService extends Service {
                 (SensorManager) getSystemService(SENSOR_SERVICE),
                 batteryManager,
                 (CameraManager) getSystemService(CAMERA_SERVICE),
-                (Vibrator) getSystemService(VIBRATOR_SERVICE)
+                (Vibrator) getSystemService(VIBRATOR_SERVICE),
+  checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
         );
 
         IntentFilter filter = new IntentFilter();
