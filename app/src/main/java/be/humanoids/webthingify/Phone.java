@@ -134,10 +134,10 @@ class Phone extends Thing implements SensorEventListener {
                     @Override
                     public void onTorchModeChanged(@NonNull String camId, boolean enabled) {
                         super.onTorchModeChanged(camId, enabled);
-                        //TODO this creates an infinite feedback loop.
                         if (cameraId.equals(camId) && !Objects.equals(on.get(), enabled)) {
-                            on.setRemote(enabled);
+                            on.updateRemote(enabled);
                         }
+
                     }
                 };
                 cameraManager.registerTorchCallback(torchCallback, null);
@@ -182,7 +182,6 @@ class Phone extends Thing implements SensorEventListener {
         if (brightnessSensor != null) {
             JSONObject brightnessDescription = new JSONObject();
             try {
-                brightnessDescription.put("@type", "LevelProperty");
                 brightnessDescription.put("type", "number");
                 brightnessDescription.put("readOnly", true);
                 brightnessDescription.put("label", "Brightness");

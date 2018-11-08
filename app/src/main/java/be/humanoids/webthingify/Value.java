@@ -1,6 +1,5 @@
 package be.humanoids.webthingify;
 
-
 import java.util.function.Consumer;
 
 class Value<T> extends org.mozilla.iot.webthing.Value<T> {
@@ -12,8 +11,13 @@ class Value<T> extends org.mozilla.iot.webthing.Value<T> {
         super(initialValue, valueForwarder);
     }
 
-    public void setRemote(T newValue) {
+    void setRemote(T newValue) {
         final ValueUpdateTask<T> task = new ValueUpdateTask<>(this);
+        task.execute(newValue);
+    }
+
+    void updateRemote(T newValue) {
+        final ValueCachedUpdateTask<T> task = new ValueCachedUpdateTask<>(this);
         task.execute(newValue);
     }
 }
