@@ -77,6 +77,7 @@ class Phone extends Thing implements SensorEventListener {
                     loudnessDescription.put("unit", "decibel");
                     loudnessDescription.put("readOnly", true);
                     loudnessDescription.put("label", "Loudness");
+                    loudnessDescription.put("description", "Decibels relative to the maximum amplitude the microphone can measure");
                 } catch (JSONException e) {
                     Log.e("wt:build", "Failed to build property description", e);
                 }
@@ -278,6 +279,7 @@ class Phone extends Thing implements SensorEventListener {
                 motionDescription.put("type", "boolean");
                 motionDescription.put("readOnly", true);
                 motionDescription.put("label", "In motion");
+                motionDescription.put("description", "If the device is currently in motion or stationary");
             } catch (JSONException e) {
                 Log.e("wt:build", "Failed to build property description", e);
             }
