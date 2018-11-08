@@ -19,10 +19,10 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.iot.webthing.Property;
 import org.mozilla.iot.webthing.Thing;
-import org.mozilla.iot.webthing.Value;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -127,15 +127,16 @@ class Phone extends Thing implements SensorEventListener {
                     try {
                         cameraManager.setTorchMode(cameraId, newValue);
                     } catch (CameraAccessException e) {
-                        // e.printStackTrace();
+                        Log.e("wt:torch", "Could not set torch state", e);
                     }
                 });
                 torchCallback = new CameraManager.TorchCallback() {
                     @Override
                     public void onTorchModeChanged(@NonNull String camId, boolean enabled) {
                         super.onTorchModeChanged(camId, enabled);
-                        if (cameraId.equals(camId)) {
-                            on.set(enabled);
+                        //TODO this creates an infinite feedback loop.
+                        if (cameraId.equals(camId) && !Objects.equals(on.get(), enabled)) {
+                            on.setRemote(enabled);
                         }
                     }
                 };
@@ -313,36 +314,36 @@ class Phone extends Thing implements SensorEventListener {
     }
 
     void setCharging(boolean isCharging) {
-        charging.set(isCharging);
+        charging.setRemote(isCharging);
     }
 
     void setBattery(int batteryPercentage) {
-        battery.set(batteryPercentage);
+        battery.setRemote(batteryPercentage);
     }
 
     @Override
     public void onSensorChanged(SensorEvent event) {
         switch (event.sensor.getType()) {
             case Sensor.TYPE_LIGHT:
-                brightness.set(event.values[0]);
+                brightness.setRemote(event.values[0]);
                 break;
             case Sensor.TYPE_PRESSURE:
-                pressure.set(event.values[0]);
+                pressure.setRemote(event.values[0]);
                 break;
             case Sensor.TYPE_PROXIMITY:
-                proximity.set(event.values[0]);
+                proximity.setRemote(event.values[0]);
                 break;
             case Sensor.TYPE_RELATIVE_HUMIDITY:
-                humidity.set(event.values[0]);
+                humidity.setRemote(event.values[0]);
                 break;
             case Sensor.TYPE_AMBIENT_TEMPERATURE:
-                temperature.set(event.values[0]);
+                temperature.setRemote(event.values[0]);
                 break;
             case Sensor.TYPE_MOTION_DETECT:
-                inMotion.set(true);
+                inMotion.setRemote(true);
                 break;
             case Sensor.TYPE_STATIONARY_DETECT:
-                inMotion.set(false);
+                inMotion.setRemote(false);
                 break;
             case Sensor.TYPE_ACCELEROMETER:
                 boolean isMoving = false;
@@ -352,7 +353,7 @@ class Phone extends Thing implements SensorEventListener {
                         isMoving = true;
                     }
                 }
-                inMotion.set(isMoving);
+                inMotion.setRemote(isMoving);
         }
     }
 
@@ -378,7 +379,7 @@ class Phone extends Thing implements SensorEventListener {
         int amplitude = recorder.getMaxAmplitude();
         if(amplitude != 0) {
             double db = 20.0 * Math.log10((double) amplitude / MAX_AMPLITUDE);
-            loudness.set((float) db);
+            loudness.setRemote((float) db);
         }
     }
 }
