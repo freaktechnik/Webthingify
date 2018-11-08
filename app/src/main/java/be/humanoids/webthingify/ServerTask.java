@@ -27,7 +27,9 @@ class ServerTask extends AsyncTask<Thing, Void, WebThingServer> {
         try {
             WebThingServer server = new WebThingServer(new WebThingServer.SingleThing(things[0]), 8088);
             server.start(false);
-            Log.i("wt:server", Utils.getIP() + ":" + Integer.toString(server.getListeningPort()));
+            for (String address : Utils.getAddresses()) {
+                Log.i("wt:server", address + ":" + Integer.toString(server.getListeningPort()));
+            }
             return server;
         } catch (IOException e) {
             Log.e("wt:server", "Error starting server", e);
