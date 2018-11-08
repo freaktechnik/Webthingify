@@ -28,6 +28,8 @@ import java.util.TimerTask;
 
 class Phone extends Thing implements SensorEventListener {
     private static final double MAX_AMPLITUDE = 32767.0;
+    private static final float DELTA = 0.1f;
+    private static final float ALPHA = 0.8f;
     private final SensorManager sensorManager;
     private final CameraManager cameraManager;
     private final Vibrator vibrator;
@@ -45,6 +47,8 @@ class Phone extends Thing implements SensorEventListener {
     private Timer loudnessTimer = null;
 
     private String cameraId = null;
+
+    private float[] gravity = new float[]{0f, 0f, 0f};
 
     Phone(String name, SensorManager sensors, BatteryManager batteries, CameraManager cameras, Vibrator vib, boolean canRecordAudio) {
         super(name,
@@ -266,8 +270,9 @@ class Phone extends Thing implements SensorEventListener {
 
         Sensor inMotionSensor = sensorManager.getDefaultSensor(Sensor.TYPE_MOTION_DETECT);
         Sensor stationarySensor = sensorManager.getDefaultSensor(Sensor.TYPE_STATIONARY_DETECT);
+        Sensor accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 
-        if (inMotionSensor != null && stationarySensor != null) {
+        if ((inMotionSensor != null && stationarySensor != null) || accelerometer != null) {
             JSONObject motionDescription = new JSONObject();
             try {
                 motionDescription.put("type", "boolean");
@@ -280,11 +285,14 @@ class Phone extends Thing implements SensorEventListener {
             inMotion = new Value<>(false);
 
             addProperty(new Property<>(this, "inMotion", inMotion, motionDescription));
-            sensorManager.registerListener(this, inMotionSensor, SensorManager.SENSOR_DELAY_NORMAL);
-            sensorManager.registerListener(this, stationarySensor, SensorManager.SENSOR_DELAY_NORMAL);
+            if (inMotionSensor != null && stationarySensor != null) {
+                sensorManager.registerListener(this, inMotionSensor, SensorManager.SENSOR_DELAY_NORMAL);
+                sensorManager.registerListener(this, stationarySensor, SensorManager.SENSOR_DELAY_NORMAL);
+            } else {
+                sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+            }
         }
 
-        //TODO ambient temp?
         //TODO add property for camera
         //TODO action to take snapshot
 
@@ -334,6 +342,15 @@ class Phone extends Thing implements SensorEventListener {
             case Sensor.TYPE_STATIONARY_DETECT:
                 inMotion.set(false);
                 break;
+            case Sensor.TYPE_ACCELEROMETER:
+                boolean isMoving = false;
+                for(int i = 0; i < 3; ++i) {
+                    gravity[i] = ALPHA * gravity[i] + (1 - ALPHA) * event.values[i];
+                    if(event.values[i] - gravity[i] > DELTA) {
+                        isMoving = true;
+                    }
+                }
+                inMotion.set(isMoving);
         }
     }
 
