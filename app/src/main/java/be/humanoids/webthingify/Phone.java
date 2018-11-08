@@ -30,6 +30,7 @@ class Phone extends Thing implements SensorEventListener {
     private static final double MAX_AMPLITUDE = 32767.0;
     private static final float DELTA = 0.1f;
     private static final float ALPHA = 0.8f;
+    private static final int INTERVAL = 1000;
     private final SensorManager sensorManager;
     private final CameraManager cameraManager;
     private final Vibrator vibrator;
@@ -90,7 +91,7 @@ class Phone extends Thing implements SensorEventListener {
                     public void run() {
                         updateLoudness();
                     }
-                }, 0, 1000);
+                }, 0, INTERVAL);
             } catch (IOException e) {
                 Log.e("wt:build", "Error starting recorder", e);
                 recorder.stop();
@@ -122,8 +123,7 @@ class Phone extends Thing implements SensorEventListener {
                 } catch (JSONException e) {
                     Log.e("wt:build", "Failed to build property description", e);
                 }
-
-                final Value<Boolean> on = new Value<>(true, newValue -> {
+                final Value<Boolean> on = new Value<>(false, newValue -> {
                     try {
                         cameraManager.setTorchMode(cameraId, newValue);
                     } catch (CameraAccessException e) {
