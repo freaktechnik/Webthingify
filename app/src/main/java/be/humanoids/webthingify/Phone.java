@@ -354,6 +354,7 @@ class Phone extends Thing implements SensorEventListener {
                     }
                 }
                 inMotion.setRemote(isMoving);
+                break;
         }
     }
 
