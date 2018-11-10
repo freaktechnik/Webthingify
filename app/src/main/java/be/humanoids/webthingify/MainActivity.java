@@ -23,7 +23,6 @@ public class MainActivity extends AppCompatActivity {
         toggle.setOnCheckedChangeListener((buttonView, isChecked) -> {
             Log.i("wt:checkbox", isChecked ? "y" : "n");
             if (isChecked) {
-
                 if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
                     requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO}, 0);
                 } else {
@@ -48,9 +47,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            startForegroundService(new Intent(this, WebthingService.class));
-        }
+        startForegroundService(new Intent(this, WebthingService.class));
     }
 
     @Override
