@@ -11,8 +11,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Icon;
 import android.hardware.SensorManager;
 import android.hardware.camera2.CameraManager;
@@ -38,7 +38,7 @@ public class WebthingService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if(Objects.equals(intent.getAction(), STOP_SELF_ACTION)) {
+        if (Objects.equals(intent.getAction(), STOP_SELF_ACTION)) {
             stopSelf();
             return START_NOT_STICKY;
         }
@@ -80,7 +80,7 @@ public class WebthingService extends Service {
                 batteryManager,
                 (CameraManager) getSystemService(CAMERA_SERVICE),
                 (Vibrator) getSystemService(VIBRATOR_SERVICE),
-  checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
+                checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
         );
 
         IntentFilter filter = new IntentFilter();
@@ -102,6 +102,9 @@ public class WebthingService extends Service {
         };
         registerReceiver(batteryReceiver, filter);
 
+        SharedPreferences prefs = getSharedPreferences(getString(R.string.prefsFile), Context.MODE_PRIVATE);
+        prefs.edit().putBoolean(getString(R.string.serviceRunning), true).apply();
+
         server = new ServerTask(isRunning -> {
             Log.d("wt:service", isRunning ? "isRunning" : "failed to start");
             if (!isRunning) {
@@ -109,7 +112,6 @@ public class WebthingService extends Service {
             }
         });
         server.execute(phone);
-        //TODO stopSelf if server isn't started and turn off switch
 
         PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
         wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "Webthingify:Server");
@@ -130,6 +132,8 @@ public class WebthingService extends Service {
         batteryReceiver = null;
         phone.onDestroy();
         phone = null;
+        SharedPreferences prefs = getSharedPreferences(getString(R.string.prefsFile), Context.MODE_PRIVATE);
+        prefs.edit().putBoolean(getString(R.string.serviceRunning), false).apply();
         stopForeground(true);
     }
 

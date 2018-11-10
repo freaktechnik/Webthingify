@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Webthingify</string>
+    <string name="serviceRunning">service_running</string>
+    <string name="prefsFile">be.humanoids.webthingify.SERVICE_PREFS</string>
 </resources>

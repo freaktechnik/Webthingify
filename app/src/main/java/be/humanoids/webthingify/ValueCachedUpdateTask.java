@@ -16,7 +16,7 @@ class ValueCachedUpdateTask<T> extends AsyncTask<T, Void, Void> {
     @SafeVarargs
     @Override
     protected final Void doInBackground(T... valueUpdates) {
-        for(T update : valueUpdates) {
+        for (T update : valueUpdates) {
             if (update != null) {
                 value.notifyOfExternalUpdate(update);
             }

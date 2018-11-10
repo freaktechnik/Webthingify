@@ -22,7 +22,6 @@ import org.mozilla.iot.webthing.Thing;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -347,9 +346,9 @@ class Phone extends Thing implements SensorEventListener {
                 break;
             case Sensor.TYPE_ACCELEROMETER:
                 boolean isMoving = false;
-                for(int i = 0; i < 3; ++i) {
+                for (int i = 0; i < 3; ++i) {
                     gravity[i] = ALPHA * gravity[i] + (1 - ALPHA) * event.values[i];
-                    if(event.values[i] - gravity[i] > DELTA) {
+                    if (event.values[i] - gravity[i] > DELTA) {
                         isMoving = true;
                     }
                 }
@@ -378,7 +377,7 @@ class Phone extends Thing implements SensorEventListener {
 
     private void updateLoudness() {
         int amplitude = recorder.getMaxAmplitude();
-        if(amplitude != 0) {
+        if (amplitude != 0) {
             double db = 20.0 * Math.log10((double) amplitude / MAX_AMPLITUDE);
             loudness.setRemote((float) db);
         }
