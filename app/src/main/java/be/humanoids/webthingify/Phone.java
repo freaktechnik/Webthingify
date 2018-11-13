@@ -153,7 +153,7 @@ class Phone extends Thing implements SensorEventListener {
             batteryDescription.put("@type", "LevelProperty");
             batteryDescription.put("label", "Battery");
             batteryDescription.put("unit", "percent");
-            batteryDescription.put("type", "number");
+            batteryDescription.put("type", "integer");
             batteryDescription.put("description", "Battery charge of the device");
             batteryDescription.put("readOnly", true);
         } catch (JSONException e) {
@@ -257,7 +257,7 @@ class Phone extends Thing implements SensorEventListener {
             try {
                 temperatureDescription.put("type", "number");
                 temperatureDescription.put("readOnly", true);
-                temperatureDescription.put("unit", "celsius");
+                temperatureDescription.put("unit", "degree celsius");
                 temperatureDescription.put("label", "Temperature");
             } catch (JSONException e) {
                 Log.e("wt:build", "Failed to build property description", e);
