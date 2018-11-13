@@ -85,6 +85,7 @@ class Phone extends Thing implements SensorEventListener {
                     loudnessDescription.put("readOnly", true);
                     loudnessDescription.put("label", "Loudness");
                     loudnessDescription.put("description", "Decibels relative to the maximum amplitude the microphone can measure");
+                    loudnessDescription.put("max", 0);
                 } catch (JSONException e) {
                     Log.e("wt:build", "Failed to build property description", e);
                 }
@@ -163,6 +164,8 @@ class Phone extends Thing implements SensorEventListener {
             batteryDescription.put("type", "integer");
             batteryDescription.put("description", "Battery charge of the device");
             batteryDescription.put("readOnly", true);
+            batteryDescription.put("min", 0);
+            batteryDescription.put("max", 100);
         } catch (JSONException e) {
             Log.e("wt:build", "Failed to build property description", e);
         }
@@ -193,6 +196,7 @@ class Phone extends Thing implements SensorEventListener {
                 brightnessDescription.put("readOnly", true);
                 brightnessDescription.put("label", "Brightness");
                 brightnessDescription.put("unit", "lux");
+                brightnessDescription.put("min", 0);
             } catch (JSONException e) {
                 Log.e("wt:build", "Failed to build property description", e);
             }
@@ -211,6 +215,7 @@ class Phone extends Thing implements SensorEventListener {
                 proximityDescription.put("readOnly", true);
                 proximityDescription.put("label", "Proximity");
                 proximityDescription.put("unit", "centimeter");
+                proximityDescription.put("min", 0);
             } catch (JSONException e) {
                 Log.e("wt:build", "Failed to build property description", e);
             }
@@ -248,6 +253,8 @@ class Phone extends Thing implements SensorEventListener {
                 humidityDescription.put("readOnly", true);
                 humidityDescription.put("unit", "percent");
                 humidityDescription.put("label", "Humidity");
+                humidityDescription.put("min", 0);
+                humidityDescription.put("max", 100);
             } catch (JSONException e) {
                 Log.e("wt:build", "Failed to build property description", e);
             }
