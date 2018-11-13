@@ -50,7 +50,14 @@ class Phone extends Thing implements SensorEventListener {
 
     private float[] gravity = new float[]{0f, 0f, 0f};
 
-    Phone(String name, SensorManager sensors, BatteryManager batteries, CameraManager cameras, Vibrator vib, boolean canRecordAudio) {
+    Phone(
+            final String name,
+            final SensorManager sensors,
+            final BatteryManager batteries,
+            final CameraManager cameras,
+            final Vibrator vib,
+            final boolean canRecordAudio
+    ) {
         super(name,
                 new JSONArray(Arrays.asList("OnOffSwitch", "Light")),
                 "An Android phone"
