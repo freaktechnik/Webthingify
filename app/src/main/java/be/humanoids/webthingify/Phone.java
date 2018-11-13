@@ -192,7 +192,7 @@ class Phone extends Thing implements SensorEventListener {
 
             brightness = new Value<>(0.0f);
 
-            addProperty(new Property<>(this, "brightness", brightness, brightnessDescription));
+            addProperty(new Property<>(this, "ambientBrightness", brightness, brightnessDescription));
             sensorManager.registerListener(this, brightnessSensor, SensorManager.SENSOR_DELAY_NORMAL);
         }
 
