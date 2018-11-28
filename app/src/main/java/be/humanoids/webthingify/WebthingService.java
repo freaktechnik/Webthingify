@@ -13,7 +13,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.graphics.drawable.Icon;
 import android.hardware.SensorManager;
 import android.hardware.camera2.CameraManager;
 import android.os.BatteryManager;
@@ -22,6 +21,7 @@ import android.os.IBinder;
 import android.os.PowerManager;
 import android.os.Vibrator;
 import android.provider.Settings;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
 import java.util.Objects;
@@ -45,12 +45,12 @@ public class WebthingService extends Service {
         createNotificationChannel();
         Intent stopSelfIntent = new Intent(this, WebthingService.class);
         stopSelfIntent.setAction(STOP_SELF_ACTION);
-        Notification.Action notificationAction = new Notification.Action.Builder(
-                Icon.createWithResource(this, android.R.drawable.ic_menu_close_clear_cancel),
+        NotificationCompat.Action notificationAction = new NotificationCompat.Action.Builder(
+                android.R.drawable.ic_menu_close_clear_cancel,
                 "Stop",
                 PendingIntent.getService(this, 0, stopSelfIntent, PendingIntent.FLAG_CANCEL_CURRENT)
         ).build();
-        Notification notification = new Notification.Builder(this, CHANNEL_ID)
+        Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
                 .setContentTitle("Web thing server")
                 .setContentText("Web thing server is running")
@@ -58,6 +58,7 @@ public class WebthingService extends Service {
                 .setLocalOnly(true)
                 .setOngoing(true)
                 .addAction(notificationAction)
+                .setContentIntent(PendingIntent.getActivity(this, 0, new Intent(this, MainActivity.class), 0, null))
                 .build();
         startForeground(1, notification);
 

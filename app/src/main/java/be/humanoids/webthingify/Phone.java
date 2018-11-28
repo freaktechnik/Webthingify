@@ -338,25 +338,39 @@ class Phone extends Thing implements SensorEventListener {
     public void onSensorChanged(SensorEvent event) {
         switch (event.sensor.getType()) {
             case Sensor.TYPE_LIGHT:
-                brightness.setRemote(event.values[0]);
+                if(event.values[0] != brightness.get()) {
+                    brightness.setRemote(event.values[0]);
+                }
                 break;
             case Sensor.TYPE_PRESSURE:
-                pressure.setRemote(event.values[0]);
+                if(event.values[0] != brightness.get()) {
+                    pressure.setRemote(event.values[0]);
+                }
                 break;
             case Sensor.TYPE_PROXIMITY:
-                proximity.setRemote(event.values[0]);
+                if(event.values[0] != proximity.get()) {
+                    proximity.setRemote(event.values[0]);
+                }
                 break;
             case Sensor.TYPE_RELATIVE_HUMIDITY:
-                humidity.setRemote(event.values[0]);
+                if(event.values[0] != humidity.get()) {
+                    humidity.setRemote(event.values[0]);
+                }
                 break;
             case Sensor.TYPE_AMBIENT_TEMPERATURE:
-                temperature.setRemote(event.values[0]);
+                if(event.values[0] != temperature.get()) {
+                    temperature.setRemote(event.values[0]);
+                }
                 break;
             case Sensor.TYPE_MOTION_DETECT:
-                inMotion.setRemote(true);
+                if(!inMotion.get()) {
+                    inMotion.setRemote(true);
+                }
                 break;
             case Sensor.TYPE_STATIONARY_DETECT:
-                inMotion.setRemote(false);
+                if(inMotion.get()) {
+                    inMotion.setRemote(false);
+                }
                 break;
             case Sensor.TYPE_ACCELEROMETER:
                 boolean isMoving = false;
@@ -366,7 +380,9 @@ class Phone extends Thing implements SensorEventListener {
                         isMoving = true;
                     }
                 }
-                inMotion.setRemote(isMoving);
+                if(isMoving != inMotion.get()) {
+                    inMotion.setRemote(isMoving);
+                }
                 break;
         }
     }
@@ -393,7 +409,9 @@ class Phone extends Thing implements SensorEventListener {
         int amplitude = recorder.getMaxAmplitude();
         if (amplitude != 0) {
             double db = 20.0 * Math.log10((double) amplitude / MAX_AMPLITUDE);
-            loudness.setRemote((float) db);
+            if(db != loudness.get()) {
+                loudness.setRemote((float) db);
+            }
         }
     }
 }
