@@ -17,11 +17,13 @@ import android.hardware.SensorManager;
 import android.hardware.camera2.CameraManager;
 import android.os.BatteryManager;
 import android.os.Binder;
+import android.os.Build;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.os.Vibrator;
 import android.provider.Settings;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.ServiceCompat;
 import android.util.Log;
 
 import java.util.Objects;
@@ -75,8 +77,14 @@ public class WebthingService extends Service {
         }
         batteryManager = (BatteryManager) getSystemService(BATTERY_SERVICE);
 
+        String deviceName = Build.MODEL;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1) {
+            deviceName = Settings.Global.getString(getContentResolver(), Settings.Global.DEVICE_NAME);
+        }
+
+
         phone = new Phone(
-                Settings.Global.getString(getContentResolver(), Settings.Global.DEVICE_NAME),
+                deviceName,
                 (SensorManager) getSystemService(SENSOR_SERVICE),
                 batteryManager,
                 (CameraManager) getSystemService(CAMERA_SERVICE),
@@ -135,7 +143,7 @@ public class WebthingService extends Service {
         phone = null;
         SharedPreferences prefs = getSharedPreferences(getString(R.string.prefsFile), Context.MODE_PRIVATE);
         prefs.edit().putBoolean(getString(R.string.serviceRunning), false).apply();
-        stopForeground(true);
+        ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE);
     }
 
     @Override
@@ -144,13 +152,15 @@ public class WebthingService extends Service {
     }
 
     private void createNotificationChannel() {
-        int importance = NotificationManager.IMPORTANCE_LOW;
-        NotificationChannel channel = new NotificationChannel(CHANNEL_ID, "Web thing service", importance);
-        channel.setDescription("Web thing service notifications");
-        channel.setImportance(NotificationManager.IMPORTANCE_LOW);
-        channel.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
-        NotificationManager notificationManager = getSystemService(NotificationManager.class);
-        notificationManager.createNotificationChannel(channel);
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            int importance = NotificationManager.IMPORTANCE_LOW;
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, "Web thing service", importance);
+            channel.setDescription("Web thing service notifications");
+            channel.setImportance(NotificationManager.IMPORTANCE_LOW);
+            channel.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
+        }
     }
 
     public class LocalBinder extends Binder {

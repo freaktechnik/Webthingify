@@ -9,6 +9,7 @@ import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraManager;
 import android.media.MediaRecorder;
 import android.os.BatteryManager;
+import android.os.Build;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.support.annotation.NonNull;
@@ -24,6 +25,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.function.Consumer;
 
 class Phone extends Thing implements SensorEventListener {
     private static final double MAX_AMPLITUDE = 32767.0;
@@ -283,8 +285,12 @@ class Phone extends Thing implements SensorEventListener {
             sensorManager.registerListener(this, temperatureSensor, SensorManager.SENSOR_DELAY_NORMAL);
         }
 
-        Sensor inMotionSensor = sensorManager.getDefaultSensor(Sensor.TYPE_MOTION_DETECT);
-        Sensor stationarySensor = sensorManager.getDefaultSensor(Sensor.TYPE_STATIONARY_DETECT);
+        Sensor inMotionSensor = null;
+        Sensor stationarySensor = null;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+            inMotionSensor = sensorManager.getDefaultSensor(Sensor.TYPE_MOTION_DETECT);
+            stationarySensor = sensorManager.getDefaultSensor(Sensor.TYPE_STATIONARY_DETECT);
+        }
         Sensor accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 
         if ((inMotionSensor != null && stationarySensor != null) || accelerometer != null) {
@@ -323,7 +329,12 @@ class Phone extends Thing implements SensorEventListener {
     }
 
     void vibrate() {
-        vibrator.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            vibrator.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE));
+        }
+        else {
+            vibrator.vibrate(500);
+        }
     }
 
     void setCharging(boolean isCharging) {

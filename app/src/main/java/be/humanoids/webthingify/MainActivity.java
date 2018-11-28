@@ -7,6 +7,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.widget.Switch;
@@ -26,7 +27,7 @@ public class MainActivity extends AppCompatActivity {
                 if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
                     requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO}, 0);
                 } else {
-                    startForegroundService(new Intent(this, WebthingService.class));
+                    ContextCompat.startForegroundService(this, new Intent(this, WebthingService.class));
                 }
             } else {
                 stopService(new Intent(this, WebthingService.class));
