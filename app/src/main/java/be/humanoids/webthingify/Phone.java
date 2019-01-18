@@ -25,7 +25,6 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.function.Consumer;
 
 class Phone extends Thing implements SensorEventListener {
     private static final double MAX_AMPLITUDE = 32767.0;
@@ -58,10 +57,13 @@ class Phone extends Thing implements SensorEventListener {
             final BatteryManager batteries,
             final CameraManager cameras,
             final Vibrator vib,
-            final boolean canRecordAudio
+            final boolean canRecordAudio,
+            final boolean canTakePictures,
+            final String camImage
     ) {
+        //TODO somehow only pass capabilities that we actually implement
         super(name,
-                new JSONArray(Arrays.asList("OnOffSwitch", "Light")),
+                new JSONArray(Arrays.asList("OnOffSwitch", "Light", "Camera", "TemperatureSensor")),
                 "An Android phone"
         );
 
@@ -83,7 +85,7 @@ class Phone extends Thing implements SensorEventListener {
                 JSONObject loudnessDescription = new JSONObject();
                 try {
                     loudnessDescription.put("type", "number");
-                    loudnessDescription.put("unit", "decibel");
+                    loudnessDescription.put("unit", "dB");
                     loudnessDescription.put("readOnly", true);
                     loudnessDescription.put("label", "Loudness");
                     loudnessDescription.put("description", "Decibels relative to the maximum amplitude the microphone can measure");
@@ -112,6 +114,9 @@ class Phone extends Thing implements SensorEventListener {
         try {
             String[] cams = cameraManager.getCameraIdList();
             for (String cam : cams) {
+                if(canTakePictures) {
+                    addCamera(cam, camImage);
+                }
                 CameraCharacteristics characteristics = cameraManager.getCameraCharacteristics(cam);
                 try {
                     if (characteristics.get(CameraCharacteristics.FLASH_INFO_AVAILABLE)) {
@@ -126,7 +131,7 @@ class Phone extends Thing implements SensorEventListener {
                 JSONObject onDescription = new JSONObject();
                 try {
                     onDescription.put("@type", "OnOffProperty");
-                    onDescription.put("label", "Flashlight On/Off");
+                    onDescription.put("title", "Flashlight On/Off");
                     onDescription.put("type", "boolean");
                     onDescription.put("description", "Whether the flashlight is turned on");
                 } catch (JSONException e) {
@@ -153,6 +158,8 @@ class Phone extends Thing implements SensorEventListener {
                 cameraManager.registerTorchCallback(torchCallback, null);
 
                 addProperty(new Property<>(this, "on", on, onDescription));
+
+                //TODO add image and video properties
             }
         } catch (CameraAccessException e) {
             Log.w("wt:flash", "Error when making flash property", e);
@@ -161,7 +168,7 @@ class Phone extends Thing implements SensorEventListener {
         JSONObject batteryDescription = new JSONObject();
         try {
             batteryDescription.put("@type", "LevelProperty");
-            batteryDescription.put("label", "Battery");
+            batteryDescription.put("title", "Battery");
             batteryDescription.put("unit", "percent");
             batteryDescription.put("type", "integer");
             batteryDescription.put("description", "Battery charge of the device");
@@ -180,7 +187,7 @@ class Phone extends Thing implements SensorEventListener {
         try {
             chargingDescription.put("type", "boolean");
             chargingDescription.put("readOnly", true);
-            chargingDescription.put("label", "Charging");
+            chargingDescription.put("title", "Charging");
             chargingDescription.put("description", "Device is plugged in and charging");
         } catch (JSONException e) {
             Log.e("wt:build", "Failed to build property description", e);
@@ -196,7 +203,7 @@ class Phone extends Thing implements SensorEventListener {
             try {
                 brightnessDescription.put("type", "number");
                 brightnessDescription.put("readOnly", true);
-                brightnessDescription.put("label", "Brightness");
+                brightnessDescription.put("title", "Brightness");
                 brightnessDescription.put("unit", "lux");
                 brightnessDescription.put("minimum", 0);
             } catch (JSONException e) {
@@ -215,8 +222,8 @@ class Phone extends Thing implements SensorEventListener {
             try {
                 proximityDescription.put("type", "number");
                 proximityDescription.put("readOnly", true);
-                proximityDescription.put("label", "Proximity");
-                proximityDescription.put("unit", "centimeter");
+                proximityDescription.put("title", "Proximity");
+                proximityDescription.put("unit", "cm");
                 proximityDescription.put("minimum", 0);
             } catch (JSONException e) {
                 Log.e("wt:build", "Failed to build property description", e);
@@ -234,8 +241,8 @@ class Phone extends Thing implements SensorEventListener {
             try {
                 pressureDescription.put("type", "number");
                 pressureDescription.put("readOnly", true);
-                pressureDescription.put("unit", "hectopascal");
-                pressureDescription.put("label", "Pressure");
+                pressureDescription.put("unit", "hPa");
+                pressureDescription.put("title", "Pressure");
             } catch (JSONException e) {
                 Log.e("wt:build", "Failed to build property description", e);
             }
@@ -254,7 +261,7 @@ class Phone extends Thing implements SensorEventListener {
                 humidityDescription.put("type", "number");
                 humidityDescription.put("readOnly", true);
                 humidityDescription.put("unit", "percent");
-                humidityDescription.put("label", "Humidity");
+                humidityDescription.put("title", "Humidity");
                 humidityDescription.put("minimum", 0);
                 humidityDescription.put("maximum", 100);
             } catch (JSONException e) {
@@ -271,10 +278,11 @@ class Phone extends Thing implements SensorEventListener {
         if (temperatureSensor != null) {
             JSONObject temperatureDescription = new JSONObject();
             try {
+                temperatureDescription.put("@type", "TemperatureProperty");
                 temperatureDescription.put("type", "number");
                 temperatureDescription.put("readOnly", true);
                 temperatureDescription.put("unit", "degree celsius");
-                temperatureDescription.put("label", "Temperature");
+                temperatureDescription.put("title", "Temperature");
             } catch (JSONException e) {
                 Log.e("wt:build", "Failed to build property description", e);
             }
@@ -298,7 +306,7 @@ class Phone extends Thing implements SensorEventListener {
             try {
                 motionDescription.put("type", "boolean");
                 motionDescription.put("readOnly", true);
-                motionDescription.put("label", "In motion");
+                motionDescription.put("title", "In motion");
                 motionDescription.put("description", "If the device is currently in motion or stationary");
             } catch (JSONException e) {
                 Log.e("wt:build", "Failed to build property description", e);
@@ -320,7 +328,7 @@ class Phone extends Thing implements SensorEventListener {
 
         JSONObject vibrateDescription = new JSONObject();
         try {
-            vibrateDescription.put("label", "Vibrate");
+            vibrateDescription.put("title", "Vibrate");
         } catch (JSONException e) {
             Log.e("wt:build", "Failed to build property description", e);
         }
@@ -331,8 +339,7 @@ class Phone extends Thing implements SensorEventListener {
     void vibrate() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             vibrator.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE));
-        }
-        else {
+        } else {
             vibrator.vibrate(500);
         }
     }
@@ -349,37 +356,37 @@ class Phone extends Thing implements SensorEventListener {
     public void onSensorChanged(SensorEvent event) {
         switch (event.sensor.getType()) {
             case Sensor.TYPE_LIGHT:
-                if(event.values[0] != brightness.get()) {
+                if (event.values[0] != brightness.get()) {
                     brightness.setRemote(event.values[0]);
                 }
                 break;
             case Sensor.TYPE_PRESSURE:
-                if(event.values[0] != brightness.get()) {
+                if (event.values[0] != brightness.get()) {
                     pressure.setRemote(event.values[0]);
                 }
                 break;
             case Sensor.TYPE_PROXIMITY:
-                if(event.values[0] != proximity.get()) {
+                if (event.values[0] != proximity.get()) {
                     proximity.setRemote(event.values[0]);
                 }
                 break;
             case Sensor.TYPE_RELATIVE_HUMIDITY:
-                if(event.values[0] != humidity.get()) {
+                if (event.values[0] != humidity.get()) {
                     humidity.setRemote(event.values[0]);
                 }
                 break;
             case Sensor.TYPE_AMBIENT_TEMPERATURE:
-                if(event.values[0] != temperature.get()) {
+                if (event.values[0] != temperature.get()) {
                     temperature.setRemote(event.values[0]);
                 }
                 break;
             case Sensor.TYPE_MOTION_DETECT:
-                if(!inMotion.get()) {
+                if (!inMotion.get()) {
                     inMotion.setRemote(true);
                 }
                 break;
             case Sensor.TYPE_STATIONARY_DETECT:
-                if(inMotion.get()) {
+                if (inMotion.get()) {
                     inMotion.setRemote(false);
                 }
                 break;
@@ -391,7 +398,7 @@ class Phone extends Thing implements SensorEventListener {
                         isMoving = true;
                     }
                 }
-                if(isMoving != inMotion.get()) {
+                if (isMoving != inMotion.get()) {
                     inMotion.setRemote(isMoving);
                 }
                 break;
@@ -420,9 +427,29 @@ class Phone extends Thing implements SensorEventListener {
         int amplitude = recorder.getMaxAmplitude();
         if (amplitude != 0) {
             double db = 20.0 * Math.log10((double) amplitude / MAX_AMPLITUDE);
-            if(db != loudness.get()) {
+            if (db != loudness.get()) {
                 loudness.setRemote((float) db);
             }
         }
+    }
+
+    private void addCamera(String cam, String fileName) {
+        JSONObject cameraDescription = new JSONObject();
+        JSONArray links = new JSONArray();
+        JSONObject link = new JSONObject();
+        links.put(link);
+        try {
+            link.put("rel", "alternate");
+            link.put("href", "/static/" + fileName);
+            link.put("mediaType", "image/jpeg");
+            cameraDescription.put("@type", "ImageProperty");
+            cameraDescription.put("readOnly", true);
+            cameraDescription.put("links", links);
+            cameraDescription.put("title", "Picture");
+        } catch (JSONException e) {
+            Log.e("wt:build", "Failed to build property description", e);
+        }
+
+        addProperty(new Property<>(this, "picture" + cam, new Value<>(null), cameraDescription));
     }
 }

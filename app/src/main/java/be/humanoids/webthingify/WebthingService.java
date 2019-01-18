@@ -24,9 +24,14 @@ import android.os.Vibrator;
 import android.provider.Settings;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.ServiceCompat;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Objects;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class WebthingService extends Service {
     private static final String CHANNEL_ID = "wt:service";
@@ -37,6 +42,8 @@ public class WebthingService extends Service {
     private BroadcastReceiver batteryReceiver;
     private ServerTask server;
     private PowerManager.WakeLock wakeLock;
+    private File targetFile;
+    private Timer cameraTimer = null;
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -82,6 +89,15 @@ public class WebthingService extends Service {
             deviceName = Settings.Global.getString(getContentResolver(), Settings.Global.DEVICE_NAME);
         }
 
+        boolean canTakePictures = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED;
+
+        File tempDir = getCacheDir();
+        try {
+            targetFile = File.createTempFile("cam", ".jpg", tempDir);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
 
         phone = new Phone(
                 deviceName,
@@ -89,7 +105,9 @@ public class WebthingService extends Service {
                 batteryManager,
                 (CameraManager) getSystemService(CAMERA_SERVICE),
                 (Vibrator) getSystemService(VIBRATOR_SERVICE),
-                checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
+                ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED,
+                canTakePictures,
+                targetFile.getName()
         );
 
         IntentFilter filter = new IntentFilter();
@@ -114,12 +132,26 @@ public class WebthingService extends Service {
         SharedPreferences prefs = getSharedPreferences(getString(R.string.prefsFile), Context.MODE_PRIVATE);
         prefs.edit().putBoolean(getString(R.string.serviceRunning), true).apply();
 
+        if (canTakePictures) {
+            cameraTimer = new Timer();
+            Context ctx = this;
+            cameraTimer.scheduleAtFixedRate(new TimerTask() {
+                @Override
+                public void run() {
+                    Intent takePicture = new Intent(ctx, Camera.class);
+                    takePicture.putExtra("file", targetFile.getAbsolutePath());
+                    ctx.startService(takePicture);
+                }
+            }, 3000, 15000);
+        }
+
         server = new ServerTask(isRunning -> {
             Log.d("wt:service", isRunning ? "isRunning" : "failed to start");
             if (!isRunning) {
                 stopSelf();
             }
-        });
+        },
+                tempDir);
         server.execute(phone);
 
         PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
@@ -141,6 +173,9 @@ public class WebthingService extends Service {
         batteryReceiver = null;
         phone.onDestroy();
         phone = null;
+        if (cameraTimer != null) {
+            cameraTimer.cancel();
+        }
         SharedPreferences prefs = getSharedPreferences(getString(R.string.prefsFile), Context.MODE_PRIVATE);
         prefs.edit().putBoolean(getString(R.string.serviceRunning), false).apply();
         ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE);

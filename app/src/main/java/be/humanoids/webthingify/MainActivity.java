@@ -12,6 +12,11 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.widget.Switch;
 
+import com.androidhiddencamera.HiddenCameraUtils;
+
+import java.util.ArrayList;
+import java.util.Objects;
+
 public class MainActivity extends AppCompatActivity {
     private SharedPreferences.OnSharedPreferenceChangeListener prefsListener;
 
@@ -24,8 +29,20 @@ public class MainActivity extends AppCompatActivity {
         toggle.setOnCheckedChangeListener((buttonView, isChecked) -> {
             Log.i("wt:checkbox", isChecked ? "y" : "n");
             if (isChecked) {
-                if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-                    requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO}, 0);
+                if (!HiddenCameraUtils.canOverDrawOtherApps(this)) {
+                    HiddenCameraUtils.openDrawOverPermissionSetting(this);
+                    return;
+                }
+                ArrayList<String> permissionsToRequest = new ArrayList<>();
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+                    permissionsToRequest.add(Manifest.permission.RECORD_AUDIO);
+                }
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+                    permissionsToRequest.add(Manifest.permission.CAMERA);
+                }
+                if (permissionsToRequest.size() > 0) {
+                    String[] permissions = new String[permissionsToRequest.size()];
+                    requestPermissions(permissionsToRequest.toArray(permissions), 0);
                 } else {
                     ContextCompat.startForegroundService(this, new Intent(this, WebthingService.class));
                 }
@@ -48,7 +65,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        startForegroundService(new Intent(this, WebthingService.class));
+        ContextCompat.startForegroundService(this, new Intent(this, WebthingService.class));
     }
 
     @Override
