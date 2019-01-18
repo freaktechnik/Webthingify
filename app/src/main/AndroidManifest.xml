@@ -24,9 +24,14 @@
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning">
         <service
-            android:name=".Camera"
+            android:name=".BackCamera"
             android:enabled="true"
-            android:exported="true"></service>
+            android:exported="true"/>
+        <service
+            android:name=".FrontCamera"
+            android:enabled="true"
+            android:exported="true"/>
+
 
         <activity android:name=".MainActivity">
             <intent-filter>

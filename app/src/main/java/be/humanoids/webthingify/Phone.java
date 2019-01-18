@@ -59,7 +59,9 @@ class Phone extends Thing implements SensorEventListener {
             final Vibrator vib,
             final boolean canRecordAudio,
             final boolean canTakePictures,
-            final String camImage
+            final String camImage,
+            final boolean hasFrontCam,
+            final String frontImage
     ) {
         //TODO somehow only pass capabilities that we actually implement
         super(name,
@@ -113,10 +115,13 @@ class Phone extends Thing implements SensorEventListener {
 
         try {
             String[] cams = cameraManager.getCameraIdList();
-            for (String cam : cams) {
-                if(canTakePictures) {
-                    addCamera(cam, camImage);
+            if(canTakePictures) {
+                addCamera("Back", camImage, "Back facing camera");
+                if(hasFrontCam) {
+                    addCamera("Front", frontImage, "Front facing camera");
                 }
+            }
+            for (String cam : cams) {
                 CameraCharacteristics characteristics = cameraManager.getCameraCharacteristics(cam);
                 try {
                     if (characteristics.get(CameraCharacteristics.FLASH_INFO_AVAILABLE)) {
@@ -433,7 +438,7 @@ class Phone extends Thing implements SensorEventListener {
         }
     }
 
-    private void addCamera(String cam, String fileName) {
+    private void addCamera(String cam, String fileName, String label) {
         JSONObject cameraDescription = new JSONObject();
         JSONArray links = new JSONArray();
         JSONObject link = new JSONObject();
@@ -445,7 +450,7 @@ class Phone extends Thing implements SensorEventListener {
             cameraDescription.put("@type", "ImageProperty");
             cameraDescription.put("readOnly", true);
             cameraDescription.put("links", links);
-            cameraDescription.put("title", "Picture");
+            cameraDescription.put("title", label);
         } catch (JSONException e) {
             Log.e("wt:build", "Failed to build property description", e);
         }

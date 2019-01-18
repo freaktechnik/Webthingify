@@ -27,6 +27,8 @@ import android.support.v4.app.ServiceCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
+import com.androidhiddencamera.HiddenCameraUtils;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Objects;
@@ -43,6 +45,7 @@ public class WebthingService extends Service {
     private ServerTask server;
     private PowerManager.WakeLock wakeLock;
     private File targetFile;
+    private File frontFile = null;
     private Timer cameraTimer = null;
 
     @Override
@@ -90,12 +93,21 @@ public class WebthingService extends Service {
         }
 
         boolean canTakePictures = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED;
+        boolean hasFrontFacingCam = HiddenCameraUtils.isFrontCameraAvailable(this);
 
         File tempDir = getCacheDir();
         try {
             targetFile = File.createTempFile("cam", ".jpg", tempDir);
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.e("cam:file", "create rear file", e);
+        }
+
+        if (hasFrontFacingCam) {
+            try {
+                frontFile = File.createTempFile("frontcam", ".jpg", tempDir);
+            } catch (IOException e) {
+                Log.e("cam:file", "create front file", e);
+            }
         }
 
 
@@ -107,7 +119,9 @@ public class WebthingService extends Service {
                 (Vibrator) getSystemService(VIBRATOR_SERVICE),
                 ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED,
                 canTakePictures,
-                targetFile.getName()
+                targetFile.getName(),
+                hasFrontFacingCam,
+                frontFile.getName()
         );
 
         IntentFilter filter = new IntentFilter();
@@ -138,9 +152,14 @@ public class WebthingService extends Service {
             cameraTimer.scheduleAtFixedRate(new TimerTask() {
                 @Override
                 public void run() {
-                    Intent takePicture = new Intent(ctx, Camera.class);
+                    Intent takePicture = new Intent(ctx, BackCamera.class);
                     takePicture.putExtra("file", targetFile.getAbsolutePath());
                     ctx.startService(takePicture);
+                    if (hasFrontFacingCam) {
+                        Intent takeFrontPic = new Intent(ctx, FrontCamera.class);
+                        takeFrontPic.putExtra("file", frontFile.getAbsolutePath());
+                        ctx.startService(takeFrontPic);
+                    }
                 }
             }, 3000, 15000);
         }
