@@ -47,6 +47,7 @@ public class WebthingService extends Service {
     private File targetFile;
     private File frontFile = null;
     private Timer cameraTimer = null;
+    private int port;
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -54,6 +55,9 @@ public class WebthingService extends Service {
             stopSelf();
             return START_NOT_STICKY;
         }
+
+        port = intent.getIntExtra("port", 8088);
+
         createNotificationChannel();
         Intent stopSelfIntent = new Intent(this, WebthingService.class);
         stopSelfIntent.setAction(STOP_SELF_ACTION);
@@ -65,7 +69,7 @@ public class WebthingService extends Service {
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_service)
                 .setContentTitle(getString(R.string.notifTitle))
-                .setContentText(getString(R.string.notifContent))
+                .setContentText(getString(R.string.notifContent, port))
                 .setCategory(Notification.CATEGORY_SERVICE)
                 .setLocalOnly(true)
                 .setOngoing(true)
@@ -170,7 +174,8 @@ public class WebthingService extends Service {
                 stopSelf();
             }
         },
-                tempDir);
+                tempDir,
+                port);
         server.execute(phone);
 
         PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);

@@ -21,12 +21,14 @@ class ServerTask extends AsyncTask<Thing, Void, WebThingServer> {
     private @Nullable
     WebThingServer server;
     private boolean shouldBeRunning = true;
-    private File tempDir;
+    final private File tempDir;
+    final private int port;
 
-    ServerTask(@NonNull ResultHandler handler, File tempDir) {
+    ServerTask(@NonNull ResultHandler handler, File tempDir, int port) {
         super();
         this.delegate = handler;
         this.tempDir = tempDir;
+        this.port = port;
     }
 
     @Override
@@ -38,7 +40,7 @@ class ServerTask extends AsyncTask<Thing, Void, WebThingServer> {
                             this.tempDir
                     });
             WebThingServer server = new WebThingServer(new WebThingServer.SingleThing(things[0]),
-                    8088,
+                    port,
                     null,
                     null,
                     Collections.singletonList(camRoute));
