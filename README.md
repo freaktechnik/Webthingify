@@ -1,4 +1,4 @@
-# Webthingify
+# ![](app/src/main/res/mipmap-hdpi/ic_launcher.png) Webthingify
 Turn your Android phone into a Web of Things things
 
 ## Supported attributes
