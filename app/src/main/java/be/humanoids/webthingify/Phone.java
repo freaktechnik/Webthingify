@@ -23,7 +23,6 @@ import org.mozilla.iot.webthing.Thing;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -53,8 +52,7 @@ class Phone extends Thing implements SensorEventListener {
 
     private float[] gravity = new float[]{0f, 0f, 0f};
 
-    private static boolean hasFlashlight(CameraManager cameras)
-    {
+    private static boolean hasFlashlight(CameraManager cameras) {
         try {
             String[] cams = cameras.getCameraIdList();
             for (String cam : cams) {
@@ -73,14 +71,12 @@ class Phone extends Thing implements SensorEventListener {
         return false;
     }
 
-    private static boolean hasTempSensor(SensorManager sensors)
-    {
+    private static boolean hasTempSensor(SensorManager sensors) {
         Sensor temperatureSensor = sensors.getDefaultSensor(Sensor.TYPE_AMBIENT_TEMPERATURE);
         return temperatureSensor != null;
     }
 
-    private static List<String> getCapabilities(CameraManager cameras, boolean canTakePictures, SensorManager sensors)
-    {
+    private static List<String> getCapabilities(CameraManager cameras, boolean canTakePictures, SensorManager sensors) {
         ArrayList<String> caps = new ArrayList<>();
 
         if (hasFlashlight(cameras)) {
@@ -162,9 +158,9 @@ class Phone extends Thing implements SensorEventListener {
 
         try {
             String[] cams = cameraManager.getCameraIdList();
-            if(canTakePictures) {
+            if (canTakePictures) {
                 addCamera("Back", camImage, "Back facing camera");
-                if(hasFrontCam) {
+                if (hasFrontCam) {
                     addCamera("Front", frontImage, "Front facing camera");
                 }
             }

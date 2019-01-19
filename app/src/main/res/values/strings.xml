@@ -7,7 +7,8 @@
     <string name="notifChannel">Web thing service</string>
     <string name="notifChannelDesc">Web thing service notifications</string>
     <string name="switchLabel">Web Thing Service</string>
-    <string name="permissionsInfo">This app requires a couple of permissions to work properly. To estimate the loudness, it needs the audio recording permission and to take pictures in the background it needs the draw over other apps and camera permissions.</string>
+    <string name="permissionsInfo">This app requires a couple of permissions to work properly. To estimate the loudness, it needs the audio recording permission and to take pictures in the background it needs the draw over other apps and camera permissions. When the camera or audio permissions are not granted the respective properties are not exposed on the web thing.</string>
     <string name="portPlaceholder">8088</string>
     <string name="portHint">Port</string>
+    <string name="port_setting">port</string>
 </resources>

@@ -1,20 +1,17 @@
 package be.humanoids.webthingify;
 
 import android.Manifest;
-import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.IBinder;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.WindowManager;
 
 import com.androidhiddencamera.CameraConfig;
 import com.androidhiddencamera.HiddenCameraService;
-import com.androidhiddencamera.config.CameraFacing;
 import com.androidhiddencamera.config.CameraImageFormat;
 import com.androidhiddencamera.config.CameraResolution;
 

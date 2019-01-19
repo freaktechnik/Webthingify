@@ -13,8 +13,7 @@ public class FrontCamera extends Camera {
 
     @Override
     protected int getOrientation() {
-        switch (currentRotation())
-        {
+        switch (currentRotation()) {
             case Surface.ROTATION_0:
                 return CameraRotation.ROTATION_270;
             case Surface.ROTATION_90:

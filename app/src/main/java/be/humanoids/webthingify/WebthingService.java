@@ -56,7 +56,7 @@ public class WebthingService extends Service {
             return START_NOT_STICKY;
         }
 
-        port = intent.getIntExtra("port", 8088);
+        port = intent.getIntExtra("port", ServerTask.DEFAULT_PORT);
 
         createNotificationChannel();
         Intent stopSelfIntent = new Intent(this, WebthingService.class);

@@ -29,17 +29,16 @@ public class MainActivity extends AppCompatActivity {
         toggle.setOnCheckedChangeListener((buttonView, isChecked) -> {
             Log.i("wt:checkbox", isChecked ? "y" : "n");
             if (isChecked) {
-                if (!HiddenCameraUtils.canOverDrawOtherApps(this)) {
-                    HiddenCameraUtils.openDrawOverPermissionSetting(this);
-                    toggle.setChecked(false);
-                    return;
-                }
                 ArrayList<String> permissionsToRequest = new ArrayList<>();
                 if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
                     permissionsToRequest.add(Manifest.permission.RECORD_AUDIO);
                 }
                 if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
                     permissionsToRequest.add(Manifest.permission.CAMERA);
+                } else if (!HiddenCameraUtils.canOverDrawOtherApps(this)) {
+                    HiddenCameraUtils.openDrawOverPermissionSetting(this);
+                    toggle.setChecked(false);
+                    return;
                 }
                 if (permissionsToRequest.size() > 0) {
                     String[] permissions = new String[permissionsToRequest.size()];
@@ -66,24 +65,31 @@ public class MainActivity extends AppCompatActivity {
         prefs.registerOnSharedPreferenceChangeListener(prefsListener);
 
         toggle.setChecked(prefs.getBoolean(getString(R.string.serviceRunning), false));
-        ((EditText)findViewById(R.id.editText2)).setText(Integer.toString(prefs.getInt("port", 8088)));
+        ((EditText) findViewById(R.id.editText2)).setText(Integer.toString(prefs.getInt(getString(R.string.port_setting), ServerTask.DEFAULT_PORT)));
     }
 
-    private void startServer()
-    {
+    private void startServer() {
         EditText port = findViewById(R.id.editText2);
         port.setEnabled(false);
         int portNumber = Integer.valueOf(port.getText().toString());
         SharedPreferences prefs = getSharedPreferences(getString(R.string.prefsFile), Context.MODE_PRIVATE);
-        prefs.edit().putInt("port", portNumber).apply();
+        prefs.edit().putInt(getString(R.string.port_setting), portNumber).apply();
         Intent server = new Intent(this, WebthingService.class);
-        server.putExtra("port", portNumber);
+        server.putExtra(getString(R.string.port_setting), portNumber);
         ContextCompat.startForegroundService(this, server);
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (!HiddenCameraUtils.canOverDrawOtherApps(this)) {
+            for (int i = 0; i < permissions.length; ++i) {
+                if (permissions[i].equals(Manifest.permission.CAMERA) && grantResults[i] == PackageManager.PERMISSION_GRANTED) {
+                    HiddenCameraUtils.openDrawOverPermissionSetting(this);
+                    return;
+                }
+            }
+        }
         startServer();
     }
 

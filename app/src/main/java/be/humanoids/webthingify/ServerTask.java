@@ -11,12 +11,13 @@ import org.mozilla.iot.webthing.WebThingServer;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collections;
 
 import fi.iki.elonen.router.RouterNanoHTTPD;
 
 class ServerTask extends AsyncTask<Thing, Void, WebThingServer> {
+    final public static int DEFAULT_PORT = 8088;
+
     private final ResultHandler delegate;
     private @Nullable
     WebThingServer server;
