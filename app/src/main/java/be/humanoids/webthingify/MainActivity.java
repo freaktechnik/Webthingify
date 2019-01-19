@@ -31,6 +31,7 @@ public class MainActivity extends AppCompatActivity {
             if (isChecked) {
                 if (!HiddenCameraUtils.canOverDrawOtherApps(this)) {
                     HiddenCameraUtils.openDrawOverPermissionSetting(this);
+                    toggle.setChecked(false);
                     return;
                 }
                 ArrayList<String> permissionsToRequest = new ArrayList<>();

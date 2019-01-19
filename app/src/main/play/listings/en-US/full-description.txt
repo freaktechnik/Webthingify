@@ -1,0 +1,5 @@
+Expose all the sensors of your Android phone as a web thing for the Mozilla IoT gateway.
+
+This app runs a web server that refreshes all the data with a foreground service. Supported sensors and other features currently include temperature, humidity, pressure, brightness, proximity, phone motion detection, camera pictures, flashlight control, vibration and power info.
+
+Currently will primarily work with the Mozilla IoT gateway, available at https://iot.mozilla.org

@@ -2,4 +2,8 @@
     <string name="app_name">Webthingify</string>
     <string name="serviceRunning">service_running</string>
     <string name="prefsFile">be.humanoids.webthingify.SERVICE_PREFS</string>
+    <string name="notifTitle">Web thing server</string>
+    <string name="notifContent">Web thing server is running</string>
+    <string name="notifChannel">Web thing service</string>
+    <string name="notifChannelDesc">Web thing service notifications</string>
 </resources>

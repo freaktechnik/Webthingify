@@ -58,14 +58,14 @@ public class WebthingService extends Service {
         Intent stopSelfIntent = new Intent(this, WebthingService.class);
         stopSelfIntent.setAction(STOP_SELF_ACTION);
         NotificationCompat.Action notificationAction = new NotificationCompat.Action.Builder(
-                android.R.drawable.ic_menu_close_clear_cancel,
+                R.drawable.ic_stop,
                 "Stop",
                 PendingIntent.getService(this, 0, stopSelfIntent, PendingIntent.FLAG_CANCEL_CURRENT)
         ).build();
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setSmallIcon(R.drawable.ic_launcher_foreground)
-                .setContentTitle("Web thing server")
-                .setContentText("Web thing server is running")
+                .setSmallIcon(R.drawable.ic_service)
+                .setContentTitle(getString(R.string.notifTitle))
+                .setContentText(getString(R.string.notifContent))
                 .setCategory(Notification.CATEGORY_SERVICE)
                 .setLocalOnly(true)
                 .setOngoing(true)
@@ -208,8 +208,8 @@ public class WebthingService extends Service {
     private void createNotificationChannel() {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
             int importance = NotificationManager.IMPORTANCE_LOW;
-            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, "Web thing service", importance);
-            channel.setDescription("Web thing service notifications");
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, getString(R.string.notifChannel), importance);
+            channel.setDescription(getString(R.string.notifChannelDesc));
             channel.setImportance(NotificationManager.IMPORTANCE_LOW);
             channel.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
             NotificationManager notificationManager = getSystemService(NotificationManager.class);
