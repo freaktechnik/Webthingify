@@ -12,6 +12,7 @@ import android.view.WindowManager;
 
 import com.androidhiddencamera.CameraConfig;
 import com.androidhiddencamera.HiddenCameraService;
+import com.androidhiddencamera.config.CameraFocus;
 import com.androidhiddencamera.config.CameraImageFormat;
 import com.androidhiddencamera.config.CameraResolution;
 
@@ -25,13 +26,9 @@ abstract public class Camera extends HiddenCameraService {
     private String targetFile = null;
     protected int facing;
 
-    public Camera() {
-    }
-
     @Override
     public IBinder onBind(Intent intent) {
-        // TODO: Return the communication channel to the service.
-        throw new UnsupportedOperationException("Not yet implemented");
+        return null;
     }
 
     @Override
@@ -42,6 +39,7 @@ abstract public class Camera extends HiddenCameraService {
                 .setCameraResolution(CameraResolution.MEDIUM_RESOLUTION)
                 .setImageFormat(CameraImageFormat.FORMAT_JPEG)
                 .setImageRotation(getOrientation())
+                .setCameraFocus(CameraFocus.AUTO)
                 .build();
         targetFile = intent.getStringExtra("file");
 

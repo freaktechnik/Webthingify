@@ -31,6 +31,7 @@ import com.androidhiddencamera.HiddenCameraUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -199,6 +200,12 @@ public class WebthingService extends Service {
         phone = null;
         if (cameraTimer != null) {
             cameraTimer.cancel();
+        }
+        if (targetFile != null) {
+            targetFile.delete();
+        }
+        if (frontFile != null) {
+            frontFile.delete();
         }
         SharedPreferences prefs = getSharedPreferences(getString(R.string.prefsFile), Context.MODE_PRIVATE);
         prefs.edit().putBoolean(getString(R.string.serviceRunning), false).apply();
