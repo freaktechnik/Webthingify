@@ -2,6 +2,7 @@ package be.humanoids.webthingify;
 
 import android.Manifest;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.IBinder;
@@ -9,6 +10,7 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
+import android.view.WindowManager;
 
 import com.androidhiddencamera.CameraConfig;
 import com.androidhiddencamera.HiddenCameraService;
@@ -42,6 +44,7 @@ abstract public class Camera extends HiddenCameraService {
                 .setCameraFacing(facing)
                 .setCameraResolution(CameraResolution.MEDIUM_RESOLUTION)
                 .setImageFormat(CameraImageFormat.FORMAT_JPEG)
+                .setImageRotation(getOrientation())
                 .build();
         targetFile = intent.getStringExtra("file");
 
@@ -70,4 +73,11 @@ abstract public class Camera extends HiddenCameraService {
         Log.e("camera", "got error");
         stopSelf();
     }
+
+    protected int currentRotation() {
+        WindowManager windowService = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
+        return windowService.getDefaultDisplay().getRotation();
+    }
+
+    abstract protected int getOrientation();
 }

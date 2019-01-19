@@ -22,7 +22,9 @@ import org.mozilla.iot.webthing.Property;
 import org.mozilla.iot.webthing.Thing;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -51,6 +53,52 @@ class Phone extends Thing implements SensorEventListener {
 
     private float[] gravity = new float[]{0f, 0f, 0f};
 
+    private static boolean hasFlashlight(CameraManager cameras)
+    {
+        try {
+            String[] cams = cameras.getCameraIdList();
+            for (String cam : cams) {
+                CameraCharacteristics characteristics = cameras.getCameraCharacteristics(cam);
+                try {
+                    if (characteristics.get(CameraCharacteristics.FLASH_INFO_AVAILABLE)) {
+                        return true;
+                    }
+                } catch (NullPointerException e) {
+                    Log.d("wt:cam", "No characteristics for camera ".concat(cam));
+                }
+            }
+        } catch (CameraAccessException e) {
+            Log.e("wt:cam", "not allowed to access cam", e);
+        }
+        return false;
+    }
+
+    private static boolean hasTempSensor(SensorManager sensors)
+    {
+        Sensor temperatureSensor = sensors.getDefaultSensor(Sensor.TYPE_AMBIENT_TEMPERATURE);
+        return temperatureSensor != null;
+    }
+
+    private static List<String> getCapabilities(CameraManager cameras, boolean canTakePictures, SensorManager sensors)
+    {
+        ArrayList<String> caps = new ArrayList<>();
+
+        if (hasFlashlight(cameras)) {
+            caps.add("OnOffSwitch");
+            caps.add("Light");
+        }
+
+        if (canTakePictures) {
+            caps.add("Camera");
+        }
+
+        if (hasTempSensor(sensors)) {
+            caps.add("TemperatureSensor");
+        }
+
+        return caps;
+    }
+
     Phone(
             final String name,
             final SensorManager sensors,
@@ -63,9 +111,8 @@ class Phone extends Thing implements SensorEventListener {
             final boolean hasFrontCam,
             final String frontImage
     ) {
-        //TODO somehow only pass capabilities that we actually implement
         super(name,
-                new JSONArray(Arrays.asList("OnOffSwitch", "Light", "Camera", "TemperatureSensor")),
+                new JSONArray(getCapabilities(cameras, canTakePictures, sensors)),
                 "An Android phone"
         );
 
@@ -163,8 +210,6 @@ class Phone extends Thing implements SensorEventListener {
                 cameraManager.registerTorchCallback(torchCallback, null);
 
                 addProperty(new Property<>(this, "on", on, onDescription));
-
-                //TODO add image and video properties
             }
         } catch (CameraAccessException e) {
             Log.w("wt:flash", "Error when making flash property", e);
