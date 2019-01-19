@@ -107,9 +107,11 @@ public class WebthingService extends Service {
             Log.e("cam:file", "create rear file", e);
         }
 
+        String frontName = "";
         if (hasFrontFacingCam) {
             try {
                 frontFile = File.createTempFile("frontcam", ".jpg", tempDir);
+                frontName = frontFile.getName();
             } catch (IOException e) {
                 Log.e("cam:file", "create front file", e);
             }
@@ -126,7 +128,7 @@ public class WebthingService extends Service {
                 canTakePictures,
                 targetFile.getName(),
                 hasFrontFacingCam,
-                frontFile.getName()
+                frontName
         );
 
         IntentFilter filter = new IntentFilter();
