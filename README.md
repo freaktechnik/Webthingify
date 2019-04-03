@@ -1,4 +1,7 @@
 # ![](app/src/main/res/mipmap-hdpi/ic_launcher.png) Webthingify
+[![Liberapay](https://img.shields.io/liberapay/receives/freaktechnik.svg?logo=liberapay)](https://liberapay.com/freaktechnik/donate) [![PayPal](https://img.shields.io/badge/PayPal-Tip-blue.svg?logo=paypal)](https://www.paypal.me/freaktechnik
+)
+
 Turn your Android phone into a Web of Things things
 
 ## Usage
@@ -24,7 +27,9 @@ start and stop the server.
 - I'm sure the vibration action could be used for something.
 
 ## How to build
+
 Uh, open it in Android Studio and it'll hopefully just work?
 
 ## What android versions does this support
+
 It runs on my Nexus 5X (with 8.1) and I haven't been able to make it run properly on my older phone that runs 6.

@@ -1,0 +1,6 @@
+Nutze die Sensoren deines Android Gerätes im Web der Dinge mit dem Gateway von Mozilla.
+
+Diese Anwendung beinhaltet einen Webserver als Vordergrunddienst, welcher diese Daten zur Verfügung stellt.
+Aktuell werden so Temperatur, Feuchtigkeit, Druck, Helligkeit, Nähe, Gerätebewegung, Akkustatus, Ladestatus und Bilder der Kameras geteilt. Zudem kann die Taschenlampe ein- und ausgeschaltet werden und eine Vibration des Gerätes ausgelöst werden.
+
+Aktuell funktioniert die Anwendung primär mit dem IoT Gateway von Mozilla, verfügbar unter https://iot.mozilla.org
