@@ -4,6 +4,8 @@
 
 Turn your Android phone into a Web of Things things
 
+[Get it on F-Droid](https://f-droid.org/en/packages/be.humanoids.webthingify)
+
 ## Usage
 
 The app UI offers a text field to choose the port the web thing server will run on and a toggle to
