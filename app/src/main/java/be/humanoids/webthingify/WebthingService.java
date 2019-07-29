@@ -119,6 +119,8 @@ public class WebthingService extends Service {
 
 
         phone = new Phone(
+                "urn:be.humanoids.webthingify:webthingify-" + Settings.Secure.getString(getContentResolver(),
+                                                                                        Settings.Secure.ANDROID_ID),
                 deviceName,
                 (SensorManager) getSystemService(SENSOR_SERVICE),
                 batteryManager,

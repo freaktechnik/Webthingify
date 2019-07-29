@@ -96,6 +96,7 @@ class Phone extends Thing implements SensorEventListener {
     }
 
     Phone(
+            final String id,
             final String name,
             final SensorManager sensors,
             final BatteryManager batteries,
@@ -107,7 +108,8 @@ class Phone extends Thing implements SensorEventListener {
             final boolean hasFrontCam,
             final String frontImage
     ) {
-        super(name,
+        super(id,
+                name,
                 new JSONArray(getCapabilities(cameras, canTakePictures, sensors)),
                 "An Android phone"
         );
